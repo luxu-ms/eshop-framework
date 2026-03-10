@@ -1,0 +1,103 @@
+@model eShopLegacy.Models.ViewModels.CheckoutViewModel
+@{
+    ViewBag.Title = "Checkout";
+}
+
+<h2 class="mb-4">Checkout</h2>
+
+@using (Html.BeginForm("Index", "Checkout", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+    <div class="row">
+        <div class="col-lg-7">
+            <!-- Shipping Address -->
+            <div class="card mb-4">
+                <div class="card-header"><strong>Shipping Address</strong></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.Street, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.Street, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Street, "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            @Html.LabelFor(m => m.City, new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.City, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger small" })
+                        </div>
+                        <div class="col">
+                            @Html.LabelFor(m => m.State, new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.State, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            @Html.LabelFor(m => m.ZipCode, new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.ZipCode, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.ZipCode, "", new { @class = "text-danger small" })
+                        </div>
+                        <div class="col">
+                            @Html.LabelFor(m => m.Country, new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.Country, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.Country, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment -->
+            <div class="card mb-4">
+                <div class="card-header"><strong>Payment Information</strong></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.CardNumber, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.CardNumber, new { @class = "form-control", placeholder = "1234567890123456", autocomplete = "cc-number" })
+                        @Html.ValidationMessageFor(m => m.CardNumber, "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.CardHolderName, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.CardHolderName, new { @class = "form-control", autocomplete = "cc-name" })
+                        @Html.ValidationMessageFor(m => m.CardHolderName, "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            @Html.LabelFor(m => m.CardExpiry, new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.CardExpiry, new { @class = "form-control", placeholder = "MM/YY", autocomplete = "cc-exp" })
+                            @Html.ValidationMessageFor(m => m.CardExpiry, "", new { @class = "text-danger small" })
+                        </div>
+                        <div class="col">
+                            @Html.LabelFor(m => m.CardSecurityNumber, new { @class = "form-label" })
+                            @Html.PasswordFor(m => m.CardSecurityNumber, new { @class = "form-control", placeholder = "CVV", autocomplete = "cc-csc" })
+                            @Html.ValidationMessageFor(m => m.CardSecurityNumber, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100">Place Order</button>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-5">
+            <div class="card sticky-top" style="top:1rem;">
+                <div class="card-header"><strong>Order Summary</strong></div>
+                <div class="card-body">
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span>@item.ProductName &times; @item.Quantity</span>
+                            <span>$@((item.UnitPrice * item.Quantity).ToString("0.00"))</span>
+                        </div>
+                    }
+                    <hr />
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total</span>
+                        <span class="text-primary">$@Model.OrderTotal.ToString("0.00")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

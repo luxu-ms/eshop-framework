@@ -1,0 +1,138 @@
+@model eShopLegacy.Models.ViewModels.AdminProductsViewModel
+@{
+    ViewBag.Title = "Manage Products";
+    bool isEditing = Model.Form != null && Model.Form.Id != 0;
+    bool showForm  = isEditing || (bool)(ViewBag.ShowForm ?? false);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Manage Products</h2>
+    <button type="button" class="btn btn-success" onclick="document.getElementById('productForm').style.display='block'">
+        + Add Product
+    </button>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @Model.SuccessMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })
+
+<!-- Product Form (Add / Edit) -->
+<div id="productForm" style="display:@(isEditing ? "block" : "none");">
+    <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <strong>@(isEditing ? "Edit Product" : "Add Product")</strong>
+        </div>
+        <div class="card-body">
+            @{
+                string formAction = isEditing ? "Edit" : "Add";
+            }
+            <form method="post" action="@Url.Action(formAction, "Admin")">
+                @Html.AntiForgeryToken()
+                @if (isEditing)
+                {
+                    <input type="hidden" name="Id" value="@Model.Form.Id" />
+                }
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Name</label>
+                        @Html.TextBox("Name", Model.Form?.Name, new { @class = "form-control" })
+                        @Html.ValidationMessage("Name", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Price ($)</label>
+                        @Html.TextBox("Price", Model.Form?.Price.ToString("0.00"), new { @class = "form-control", type = "number", step = "0.01", min = "0.01" })
+                        @Html.ValidationMessage("Price", "", new { @class = "text-danger small" })
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Available Stock</label>
+                        @Html.TextBox("AvailableStock", Model.Form?.AvailableStock, new { @class = "form-control", type = "number", min = "0" })
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Brand</label>
+                        <select name="CatalogBrandId" class="form-select">
+                            @foreach (var b in Model.Brands)
+                            {
+                                <option value="@b.Id" @(Model.Form?.CatalogBrandId == b.Id ? "selected" : "")>@b.Brand</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Type</label>
+                        <select name="CatalogTypeId" class="form-select">
+                            @foreach (var t in Model.Types)
+                            {
+                                <option value="@t.Id" @(Model.Form?.CatalogTypeId == t.Id ? "selected" : "")>@t.Type</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    @Html.TextArea("Description", Model.Form?.Description ?? "", new { @class = "form-control", rows = "3" })
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="@Url.Action("Products", "Admin")" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Brand</th>
+                    <th>Type</th>
+                    <th class="text-end">Price</th>
+                    <th class="text-end">Stock</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Products)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Name</td>
+                        <td>@(item.CatalogBrand != null ? item.CatalogBrand.Brand : "")</td>
+                        <td>@(item.CatalogType != null ? item.CatalogType.Type : "")</td>
+                        <td class="text-end">$@item.Price.ToString("0.00")</td>
+                        <td class="text-end">@item.AvailableStock</td>
+                        <td class="text-end">
+                            <a href="@Url.Action("Edit", "Admin", new { id = item.Id })" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <form method="post" action="@Url.Action("Delete", "Admin")" class="d-inline" onsubmit="return confirm('Delete this product?')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Auto-show form if there are validation errors
+        @if (!ViewData.ModelState.IsValid) {
+            <text>document.getElementById('productForm').style.display = 'block';</text>
+        }
+    </script>
+}

@@ -1,7 +1,7 @@
 using System;
 using System.Web;
+using System.Web.Mvc;
 using System.Web.Routing;
-using System.Web.Security;
 using eShopLegacy.DAL;
 
 namespace eShopLegacy
@@ -10,8 +10,10 @@ namespace eShopLegacy
     {
         void Application_Start(object sender, EventArgs e)
         {
-            System.Web.UI.ValidationSettings.UnobtrusiveValidationMode = System.Web.UI.UnobtrusiveValidationMode.None;
+            AreaRegistration.RegisterAllAreas();
+            GlobalFilters.Filters.Add(new HandleErrorAttribute());
             RouteConfig.RegisterRoutes(RouteTable.Routes);
+            FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             DatabaseInitializer.Initialize();
         }
 

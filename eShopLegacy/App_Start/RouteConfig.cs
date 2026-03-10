@@ -1,3 +1,4 @@
+using System.Web.Mvc;
 using System.Web.Routing;
 
 namespace eShopLegacy
@@ -6,10 +7,13 @@ namespace eShopLegacy
     {
         public static void RegisterRoutes(RouteCollection routes)
         {
-            // Standard WebForms – no additional routing needed.
-            // Pages are accessed via their .aspx URLs.
-            // Add custom routes here if desired, e.g.:
-            // routes.MapPageRoute("CatalogRoute", "catalog", "~/Catalog/Default.aspx");
+            routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
+
+            routes.MapRoute(
+                name: "Default",
+                url: "{controller}/{action}/{id}",
+                defaults: new { controller = "Catalog", action = "Index", id = UrlParameter.Optional }
+            );
         }
     }
 }

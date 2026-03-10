@@ -1,0 +1,60 @@
+@model eShopLegacy.Models.ViewModels.OrderHistoryViewModel
+@{
+    ViewBag.Title = "My Orders";
+}
+
+<h2 class="mb-4">My Orders</h2>
+
+@if (!Model.Orders.Any())
+{
+    <div class="alert alert-info">You have no orders yet. <a href="@Url.Action("Index", "Catalog")">Start shopping</a></div>
+}
+else
+{
+    foreach (var order in Model.Orders)
+    {
+        string badgeClass;
+        switch (order.Status)
+        {
+            case eShopLegacy.Models.OrderStatus.Paid:
+            case eShopLegacy.Models.OrderStatus.Shipped:    badgeClass = "bg-success"; break;
+            case eShopLegacy.Models.OrderStatus.Cancelled:  badgeClass = "bg-danger";  break;
+            case eShopLegacy.Models.OrderStatus.Submitted:  badgeClass = "bg-primary"; break;
+            default:                                          badgeClass = "bg-secondary"; break;
+        }
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Order #<strong>@order.Id</strong> &mdash; @order.OrderDate.ToLocalTime().ToString("f")</span>
+                <span class="badge @badgeClass">@order.Status</span>
+            </div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in order.OrderItems)
+                        {
+                            <tr>
+                                <td>@item.ProductName</td>
+                                <td class="text-center">@item.Units</td>
+                                <td class="text-end">$@item.UnitPrice.ToString("0.00")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="2" class="text-end fw-bold">Order Total</td>
+                            <td class="text-end fw-bold text-primary">$@order.Total.ToString("0.00")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    }
+}

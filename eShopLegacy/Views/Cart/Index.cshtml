@@ -1,0 +1,77 @@
+@model eShopLegacy.Models.ViewModels.ShoppingCartViewModel
+@{
+    ViewBag.Title = "Shopping Cart";
+}
+
+<h2 class="mb-4">Shopping Cart</h2>
+
+@if (!Model.Items.Any())
+{
+    <div class="alert alert-info">Your cart is empty. <a href="@Url.Action("Index", "Catalog")">Continue shopping</a></div>
+}
+else
+{
+    <div class="row">
+        <div class="col-lg-8">
+            @foreach (var item in Model.Items)
+            {
+                <div class="card mb-3">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <img src="/images/products/@(item.CatalogItemId).png" alt="@item.ProductName" style="width:64px;height:64px;object-fit:contain;" onerror="this.onerror=null;this.src='/Content/placeholder.png';" />
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">@item.ProductName</h6>
+                            <small class="text-muted">$@item.UnitPrice.ToString("0.00") each</small>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <form method="post" action="@Url.Action("Decrement", "Cart")" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="basketItemId" value="@item.Id" />
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">-</button>
+                            </form>
+                            <span class="px-2 fw-bold">@item.Quantity</span>
+                            <form method="post" action="@Url.Action("Increment", "Cart")" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="basketItemId" value="@item.Id" />
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">+</button>
+                            </form>
+                        </div>
+                        <div class="fw-bold text-primary" style="min-width:70px;text-align:right;">
+                            $@((item.UnitPrice * item.Quantity).ToString("0.00"))
+                        </div>
+                        <form method="post" action="@Url.Action("Remove", "Cart")" class="d-inline ms-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="basketItemId" value="@item.Id" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm">&times;</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Order Summary</h5>
+                    <hr />
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Items (@Model.TotalQuantity)</span>
+                        <strong>$@Model.Subtotal.ToString("0.00")</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping</span>
+                        <span class="text-success">Free</span>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total</strong>
+                        <strong class="text-primary fs-5">$@Model.Total.ToString("0.00")</strong>
+                    </div>
+                    <form method="post" action="@Url.Action("Checkout", "Cart")">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary w-100">Proceed to Checkout</button>
+                    </form>
+                    <a href="@Url.Action("Index", "Catalog")" class="btn btn-outline-secondary w-100 mt-2">Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}

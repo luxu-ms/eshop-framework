@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using System.Data.Entity;
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.EntityFramework;
+using eShopLegacy.App_Start;
 using eShopLegacy.Models;
 
 namespace eShopLegacy.DAL
@@ -49,6 +52,27 @@ namespace eShopLegacy.DAL
             };
             context.CatalogItems.AddRange(items);
             context.SaveChanges();
+
+            // Seed Admin role and admin user
+            var roleStore   = new RoleStore<IdentityRole>(context);
+            var roleManager = new RoleManager<IdentityRole>(roleStore);
+            if (!roleManager.RoleExists("Admin"))
+                roleManager.Create(new IdentityRole("Admin"));
+
+            var userManager = IdentityConfig.CreateUserManager();
+            const string adminEmail = "admin@eshop.com";
+            if (userManager.FindByName(adminEmail) == null)
+            {
+                var adminUser = new ApplicationUser
+                {
+                    UserName = adminEmail,
+                    Email    = adminEmail,
+                    Name     = "Shop",
+                    LastName = "Admin"
+                };
+                userManager.Create(adminUser, "Admin@123!");
+                userManager.AddToRole(adminUser.Id, "Admin");
+            }
 
             base.Seed(context);
         }
