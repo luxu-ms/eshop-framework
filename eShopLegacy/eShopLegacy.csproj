@@ -115,12 +115,14 @@
     <!-- Catalog -->
     <Compile Include="Catalog\Default.aspx.cs">
       <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Catalog\Default.aspx.designer.cs">
       <DependentUpon>Default.aspx</DependentUpon>
     </Compile>
     <Compile Include="Catalog\ProductDetail.aspx.cs">
       <DependentUpon>ProductDetail.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Catalog\ProductDetail.aspx.designer.cs">
       <DependentUpon>ProductDetail.aspx</DependentUpon>
@@ -128,6 +130,7 @@
     <!-- Cart -->
     <Compile Include="Cart\ShoppingCart.aspx.cs">
       <DependentUpon>ShoppingCart.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Cart\ShoppingCart.aspx.designer.cs">
       <DependentUpon>ShoppingCart.aspx</DependentUpon>
@@ -135,18 +138,21 @@
     <!-- Checkout -->
     <Compile Include="Checkout\Checkout.aspx.cs">
       <DependentUpon>Checkout.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Checkout\Checkout.aspx.designer.cs">
       <DependentUpon>Checkout.aspx</DependentUpon>
     </Compile>
     <Compile Include="Checkout\OrderComplete.aspx.cs">
       <DependentUpon>OrderComplete.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Checkout\OrderComplete.aspx.designer.cs">
       <DependentUpon>OrderComplete.aspx</DependentUpon>
     </Compile>
     <Compile Include="Checkout\OrderHistory.aspx.cs">
       <DependentUpon>OrderHistory.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Checkout\OrderHistory.aspx.designer.cs">
       <DependentUpon>OrderHistory.aspx</DependentUpon>
@@ -154,12 +160,14 @@
     <!-- Account -->
     <Compile Include="Account\Login.aspx.cs">
       <DependentUpon>Login.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Account\Login.aspx.designer.cs">
       <DependentUpon>Login.aspx</DependentUpon>
     </Compile>
     <Compile Include="Account\Register.aspx.cs">
       <DependentUpon>Register.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Account\Register.aspx.designer.cs">
       <DependentUpon>Register.aspx</DependentUpon>
@@ -167,6 +175,7 @@
     <!-- Admin -->
     <Compile Include="Admin\Products.aspx.cs">
       <DependentUpon>Products.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Admin\Products.aspx.designer.cs">
       <DependentUpon>Products.aspx</DependentUpon>
@@ -197,6 +206,7 @@
     </Content>
     <Compile Include="Site.Master.cs">
       <DependentUpon>Site.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Site.Master.designer.cs">
       <DependentUpon>Site.Master</DependentUpon>
@@ -204,6 +214,7 @@
     <Content Include="Default.aspx" />
     <Compile Include="Default.aspx.cs">
       <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Content Include="Catalog\Default.aspx" />
     <Content Include="Catalog\ProductDetail.aspx" />
