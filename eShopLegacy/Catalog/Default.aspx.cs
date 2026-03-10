@@ -39,12 +39,15 @@ namespace eShopLegacy.Catalog
                     ddlType.Items.Add(new ListItem(type.Type, type.Id.ToString()));
             }
 
-            // Reflect query-string selections in the dropdowns
-            var brandItem = ddlBrand.Items.FindByValue(QsBrand.ToString());
-            if (brandItem != null) brandItem.Selected = true;
-            var typeItem = ddlType.Items.FindByValue(QsType.ToString());
-            if (typeItem != null) typeItem.Selected = true;
-            txtSearch.Text = QsSearch;
+            // Reflect query-string selections in the dropdowns (skip on postback — form data already restores them)
+            if (!IsPostBack)
+            {
+                var brandItem = ddlBrand.Items.FindByValue(QsBrand.ToString());
+                if (brandItem != null) brandItem.Selected = true;
+                var typeItem = ddlType.Items.FindByValue(QsType.ToString());
+                if (typeItem != null) typeItem.Selected = true;
+                txtSearch.Text = QsSearch;
+            }
         }
 
         private void BindProducts()
@@ -93,19 +96,22 @@ namespace eShopLegacy.Catalog
         protected string GetProductImage(object pictureUri)
         {
             var uri = pictureUri?.ToString();
-            if (string.IsNullOrEmpty(uri)) return ResolveUrl("~/Content/placeholder.png");
-            return ResolveUrl("~/Content/placeholder.png"); // Replace with actual image path
+            if (!string.IsNullOrEmpty(uri))
+                return uri;
+            return ResolveUrl("~/Content/placeholder.png") + "?v=2";
         }
 
         protected void btnSearch_Click(object sender, EventArgs e)
         {
-            // Build redirect URL with the typed search term
-            var q   = txtSearch.Text.Trim();
+            // Read values from posted form controls (not query string — postback hasn't redirected yet)
+            var q      = txtSearch.Text.Trim();
+            int brand  = int.TryParse(ddlBrand.SelectedValue, out int b) ? b : 0;
+            int type   = int.TryParse(ddlType.SelectedValue,  out int t) ? t : 0;
             var url = "Default.aspx";
             var sep = "?";
-            if (QsBrand != 0)          { url += sep + "brand=" + QsBrand;             sep = "&"; }
-            if (QsType  != 0)          { url += sep + "type="  + QsType;              sep = "&"; }
-            if (!string.IsNullOrEmpty(q)) { url += sep + "q=" + Uri.EscapeDataString(q); }
+            if (brand != 0)                      { url += sep + "brand=" + brand;                    sep = "&"; }
+            if (type  != 0)                      { url += sep + "type="  + type;                     sep = "&"; }
+            if (!string.IsNullOrEmpty(q))        { url += sep + "q="    + Uri.EscapeDataString(q);  sep = "&"; }
             Response.Redirect(url);
         }
 

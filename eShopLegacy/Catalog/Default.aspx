@@ -1,4 +1,4 @@
-<%@ Page Title="Catalog" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="Default.aspx.cs" Inherits="eShopLegacy.Catalog.CatalogPage" %>
+<%@ Page Title="Catalog" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="Default.aspx.cs" Inherits="eShopLegacy.Catalog.CatalogPage" EnableEventValidation="false" %>
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
 </asp:Content>
@@ -44,7 +44,7 @@
                                     <img src='<%# GetProductImage(Eval("PictureUri")) %>'
                                          class="card-img-top product-img"
                                          alt='<%# Eval("Name") %>'
-                                         onerror="this.src='/Content/placeholder.png'" />
+                                         onerror="this.onerror=null;this.src='/Content/placeholder.png?v=2';" />
                                 </a>
                                 <div class="card-body d-flex flex-column">
                                     <h6 class="card-title"><%# Eval("Name") %></h6>

@@ -15,6 +15,17 @@ namespace eShopLegacy.Account
         {
             if (User.Identity.IsAuthenticated)
                 Response.Redirect("~/");
+
+            if (!IsPostBack)
+            {
+                // Pre-fill email if the remember-me cookie exists
+                var rememberedEmail = Request.Cookies["remember_email"]?.Value;
+                if (!string.IsNullOrEmpty(rememberedEmail))
+                {
+                    txtEmail.Text = Server.HtmlDecode(rememberedEmail);
+                    chkRemember.Checked = true;
+                }
+            }
         }
 
         protected void btnLogin_Click(object sender, EventArgs e)
@@ -37,6 +48,23 @@ namespace eShopLegacy.Account
             {
                 IsPersistent = chkRemember.Checked
             }, identity);
+
+            // Save or clear the remember-me email cookie
+            if (chkRemember.Checked)
+            {
+                var cookie = new HttpCookie("remember_email", Server.HtmlEncode(txtEmail.Text.Trim()))
+                {
+                    Expires  = DateTime.Now.AddDays(30),
+                    HttpOnly = true
+                };
+                Response.Cookies.Set(cookie);
+            }
+            else
+            {
+                // Expire any existing cookie
+                var cookie = new HttpCookie("remember_email") { Expires = DateTime.Now.AddDays(-1) };
+                Response.Cookies.Set(cookie);
+            }
 
             // Transfer anonymous basket to user basket
             TransferAnonymousBasket(user.UserName);

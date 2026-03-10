@@ -53,7 +53,7 @@
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="~/Checkout/OrderHistory.aspx" runat="server">My Orders</a></li>
                                         <li><hr class="dropdown-divider" /></li>
-                                        <li><asp:LoginStatus ID="loginStatus" runat="server" LogoutText="Sign Out" LogoutAction="Redirect" LogoutPageUrl="~/" CssClass="dropdown-item" /></li>
+                                        <li><asp:LinkButton ID="btnSignOut" runat="server" CssClass="dropdown-item" OnClick="btnSignOut_Click">Sign Out</asp:LinkButton></li>
                                     </ul>
                                 </li>
                             </LoggedInTemplate>
@@ -75,10 +75,10 @@
                 <small>eShop on .NET Framework 4.8 &mdash; WebForms Reference Application</small>
             </div>
         </footer>
-    </form>
 
-    <script src="/Scripts/jquery-3.6.0.min.js"></script>
-    <script src="/Scripts/bootstrap.bundle.min.js"></script>
-    <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
+        <script src="/Scripts/jquery-3.6.0.min.js"></script>
+        <script src="/Scripts/bootstrap.bundle.min.js"></script>
+        <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
+    </form>
 </body>
 </html>

@@ -10,5 +10,6 @@ namespace eShopLegacy
     {
         protected global::System.Web.UI.WebControls.Label lblCartCount;
         protected global::System.Web.UI.ScriptManager ScriptManager1;
+        protected global::System.Web.UI.WebControls.LinkButton btnSignOut;
     }
 }

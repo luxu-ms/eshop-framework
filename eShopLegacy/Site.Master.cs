@@ -1,7 +1,8 @@
 using System;
 using System.Web;
 using System.Web.UI;
-using System.Web.Security;
+using Microsoft.AspNet.Identity;
+using Microsoft.Owin.Security;
 using eShopLegacy.DAL;
 
 namespace eShopLegacy
@@ -31,6 +32,14 @@ namespace eShopLegacy
                     lblCartCount.Visible = true;
                 }
             }
+        }
+
+        protected void btnSignOut_Click(object sender, EventArgs e)
+        {
+            HttpContext.Current.GetOwinContext().Authentication.SignOut(
+                DefaultAuthenticationTypes.ApplicationCookie);
+            Session.Clear();
+            Response.Redirect("~/");
         }
 
         private string GetBuyerId()

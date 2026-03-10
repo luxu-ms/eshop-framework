@@ -145,6 +145,12 @@
     <Compile Include="Checkout\OrderComplete.aspx.designer.cs">
       <DependentUpon>OrderComplete.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Checkout\OrderHistory.aspx.cs">
+      <DependentUpon>OrderHistory.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Checkout\OrderHistory.aspx.designer.cs">
+      <DependentUpon>OrderHistory.aspx</DependentUpon>
+    </Compile>
     <!-- Account -->
     <Compile Include="Account\Login.aspx.cs">
       <DependentUpon>Login.aspx</DependentUpon>
@@ -204,6 +210,7 @@
     <Content Include="Cart\ShoppingCart.aspx" />
     <Content Include="Checkout\Checkout.aspx" />
     <Content Include="Checkout\OrderComplete.aspx" />
+    <Content Include="Checkout\OrderHistory.aspx" />
     <Content Include="Account\Login.aspx" />
     <Content Include="Account\Register.aspx" />
     <Content Include="Admin\Products.aspx" />

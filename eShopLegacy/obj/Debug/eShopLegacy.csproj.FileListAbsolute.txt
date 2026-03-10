@@ -1,6 +1,5 @@
 C:\source\fx-to-core\eshop-framework\eShopLegacy\obj\Debug\eShopLegacy.csproj.AssemblyReference.cache
 C:\source\fx-to-core\eshop-framework\eShopLegacy\obj\Debug\eShopLegacy.csproj.CoreCompileInputs.cache
-C:\source\fx-to-core\eshop-framework\eShopLegacy\bin\eShopLegacy.dll.config
 C:\source\fx-to-core\eshop-framework\eShopLegacy\bin\eShopLegacy.dll
 C:\source\fx-to-core\eshop-framework\eShopLegacy\bin\eShopLegacy.pdb
 C:\source\fx-to-core\eshop-framework\eShopLegacy\bin\EntityFramework.dll
@@ -25,3 +24,4 @@ C:\source\fx-to-core\eshop-framework\eShopLegacy\bin\Microsoft.Owin.Security.Coo
 C:\source\fx-to-core\eshop-framework\eShopLegacy\obj\Debug\eShopLeg.6BDC2D77.Up2Date
 C:\source\fx-to-core\eshop-framework\eShopLegacy\obj\Debug\eShopLegacy.dll
 C:\source\fx-to-core\eshop-framework\eShopLegacy\obj\Debug\eShopLegacy.pdb
+C:\source\fx-to-core\eshop-framework\eShopLegacy\bin\eShopLegacy.dll.config
