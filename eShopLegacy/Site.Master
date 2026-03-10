@@ -1,0 +1,84 @@
+<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.Master.cs" Inherits="eShopLegacy.SiteMaster" %>
+<!DOCTYPE html>
+<html lang="en">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%: Page.Title %> - eShop on Web Forms</title>
+    <link href="/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="/Content/site.css" rel="stylesheet" />
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
+</head>
+<body>
+    <form runat="server">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark eshop-navbar">
+            <div class="container">
+                <a class="navbar-brand" href="~/" runat="server">
+                    <img src="~/Content/eshop-logo.svg" height="32" alt="" class="me-2" onerror="this.style.display='none'" runat="server" />
+                    eShop
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="~/Catalog/Default.aspx" runat="server">Catalog</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                        <li class="nav-item me-3">
+                            <a class="nav-link position-relative" href="~/Cart/ShoppingCart.aspx" runat="server">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                                </svg>
+                                <asp:Label ID="lblCartCount" runat="server" CssClass="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" Text="0" Visible="false"></asp:Label>
+                            </a>
+                        </li>
+                        <asp:LoginView ID="loginView" runat="server">
+                            <AnonymousTemplate>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="~/Account/Login.aspx" runat="server">Sign In</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="~/Account/Register.aspx" runat="server">Register</a>
+                                </li>
+                            </AnonymousTemplate>
+                            <LoggedInTemplate>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
+                                        Welcome, <asp:LoginName ID="loginName" runat="server" />
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="~/Checkout/OrderHistory.aspx" runat="server">My Orders</a></li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li><asp:LoginStatus ID="loginStatus" runat="server" LogoutText="Sign Out" LogoutAction="Redirect" LogoutPageUrl="~/" CssClass="dropdown-item" /></li>
+                                    </ul>
+                                </li>
+                            </LoggedInTemplate>
+                        </asp:LoginView>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <asp:ScriptManager ID="ScriptManager1" runat="server" />
+        <main class="container my-4">
+            <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer bg-dark text-white py-3 mt-auto">
+            <div class="container text-center">
+                <small>eShop on .NET Framework 4.8 &mdash; WebForms Reference Application</small>
+            </div>
+        </footer>
+    </form>
+
+    <script src="/Scripts/jquery-3.6.0.min.js"></script>
+    <script src="/Scripts/bootstrap.bundle.min.js"></script>
+    <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
+</body>
+</html>
