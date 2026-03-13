@@ -1,0 +1,52 @@
+@inherits LayoutComponentBase
+
+<div class="page">
+    <header class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">eShopLegacy</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <ul class="navbar-nav flex-grow-1">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/catalog">Catalog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="/basket">Shopping Cart</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <AuthorizeView>
+                        <Authorized>
+                            <li class="nav-item">
+                                <span class="nav-link">Hello, @context.User.Identity?.Name!</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="/Account/Logout">Logout</a>
+                            </li>
+                        </Authorized>
+                        <NotAuthorized>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="/Account/Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="/Account/Register">Register</a>
+                            </li>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <main role="main" class="pb-3">
+        @Body
+    </main>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2024 - eShopLegacy
+        </div>
+    </footer>
+</div>

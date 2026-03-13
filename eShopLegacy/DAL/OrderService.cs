@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Threading.Tasks;
 using eShopLegacy.Models;
 
 namespace eShopLegacy.DAL
@@ -15,7 +16,7 @@ namespace eShopLegacy.DAL
             _context = context;
         }
 
-        public Order CreateOrderFromBasket(
+        public async Task<Order> CreateOrderFromBasketAsync(
             string buyerId,
             string buyerName,
             Address shippingAddress,
@@ -25,9 +26,9 @@ namespace eShopLegacy.DAL
             string cardSecurityNumber,
             int cardTypeId)
         {
-            var basket = _context.Baskets
+            var basket = await _context.Baskets
                 .Include(b => b.Items)
-                .FirstOrDefault(b => b.BuyerId == buyerId);
+                .FirstOrDefaultAsync(b => b.BuyerId == buyerId);
 
             if (basket == null || !basket.Items.Any())
                 throw new InvalidOperationException("Basket is empty.");
@@ -70,50 +71,33 @@ namespace eShopLegacy.DAL
             // Clear basket
             _context.BasketItems.RemoveRange(basket.Items);
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return order;
         }
 
-        public List<Order> GetOrdersForBuyer(string buyerId)
+        public async Task<List<Order>> GetOrdersForBuyerAsync(string buyerId)
         {
-            return _context.Orders
+            return await _context.Orders
                 .Include(o => o.OrderItems)
                 .Where(o => o.BuyerId == buyerId)
                 .OrderByDescending(o => o.OrderDate)
-                .ToList();
+                .ToListAsync();
         }
 
-        public Order GetOrder(int orderId, string buyerId)
+        public async Task<Order?> GetOrderAsync(int orderId)
         {
-            return _context.Orders
+            return await _context.Orders
                 .Include(o => o.OrderItems)
-                .FirstOrDefault(o => o.Id == orderId && o.BuyerId == buyerId);
+                .FirstOrDefaultAsync(o => o.Id == orderId);
         }
 
-        public List<Order> GetAllOrders()
-        {
-            return _context.Orders
-                .Include(o => o.OrderItems)
-                .OrderByDescending(o => o.OrderDate)
-                .ToList();
-        }
-
-        public void UpdateOrderStatus(int orderId, OrderStatus status)
-        {
-            var order = _context.Orders.Find(orderId);
-            if (order != null)
-            {
-                order.Status = status;
-                _context.SaveChanges();
-            }
-        }
-
-        private static string MaskCardNumber(string cardNumber)
+        private string MaskCardNumber(string cardNumber)
         {
             if (string.IsNullOrEmpty(cardNumber) || cardNumber.Length < 4)
                 return cardNumber;
-            return new string('*', cardNumber.Length - 4) + cardNumber.Substring(cardNumber.Length - 4);
+
+            return "****-****-****-" + cardNumber.Substring(cardNumber.Length - 4);
         }
     }
 }

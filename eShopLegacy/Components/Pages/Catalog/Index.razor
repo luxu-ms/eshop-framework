@@ -1,0 +1,220 @@
+@page "/"
+@page "/catalog"
+@using Microsoft.AspNetCore.Components.Web
+@inject CatalogService CatalogService
+@inject BasketService BasketService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@rendermode @(new InteractiveServerRenderMode())
+
+<PageTitle>Catalog - eShopLegacy</PageTitle>
+
+<div class="container">
+    <h2>Product Catalog</h2>
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label>Brand</label>
+            <select class="form-control" @bind="selectedBrand" @bind:after="ApplyFiltersAsync">
+                <option value="0">All Brands</option>
+                @foreach (var brand in brands)
+                {
+                    <option value="@brand.Id">@brand.Brand</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label>Type</label>
+            <select class="form-control" @bind="selectedType" @bind:after="ApplyFiltersAsync">
+                <option value="0">All Types</option>
+                @foreach (var type in types)
+                {
+                    <option value="@type.Id">@type.Type</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label>Search</label>
+            <input type="text" class="form-control" @bind="searchQuery" @bind:event="oninput" placeholder="Search products..." />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-primary w-100" @onclick="ApplyFiltersAsync">Search</button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (products.Count == 0)
+    {
+        <div class="alert alert-info">No products found.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var product in products)
+            {
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100">
+                        <img src="@(product.PictureUri ?? "/images/placeholder.png")" class="card-img-top" alt="@product.Name" />
+                        <div class="card-body">
+                            <h5 class="card-title">@product.Name</h5>
+                            <p class="card-text text-muted">@product.Description</p>
+                            <p class="card-text"><strong>@product.Price.ToString("C")</strong></p>
+                            <button class="btn btn-primary w-100" @onclick="() => AddToCartAsync(product.Id, product.Price)" disabled="@isAddingToCart">
+                                @if (isAddingToCart && lastAddedProductId == product.Id)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                }
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <nav>
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(currentPage == 0 ? "disabled" : "")">
+                        <button class="page-link" @onclick="PrevPageAsync" disabled="@(currentPage == 0)">Previous</button>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">Page @(currentPage + 1) of @totalPages</span>
+                    </li>
+                    <li class="page-item @(currentPage + 1 >= totalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="NextPageAsync" disabled="@(currentPage + 1 >= totalPages)">Next</button>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+
+    @if (showAddedToast)
+    {
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div class="toast show" role="alert">
+                <div class="toast-header">
+                    <strong class="me-auto">Success</strong>
+                    <button type="button" class="btn-close" @onclick="() => showAddedToast = false"></button>
+                </div>
+                <div class="toast-body">
+                    Item added to cart!
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private const int PageSize = 8;
+
+    // Component state (replaces ViewState)
+    private int currentPage = 0;
+    private int selectedBrand = 0;
+    private int selectedType = 0;
+    private string searchQuery = "";
+    private int total = 0;
+    private int totalPages = 1;
+    private bool isLoading = false;
+    private bool isAddingToCart = false;
+    private int lastAddedProductId = 0;
+    private bool showAddedToast = false;
+
+    private List<CatalogBrand> brands = new();
+    private List<CatalogType> types = new();
+    private List<CatalogItem> products = new();
+
+    // OnInitializedAsync = Page_Load with !IsPostBack
+    protected override async Task OnInitializedAsync()
+    {
+        brands = await CatalogService.GetCatalogBrandsAsync();
+        types = await CatalogService.GetCatalogTypesAsync();
+        await LoadProductsAsync();
+    }
+
+    private async Task ApplyFiltersAsync()
+    {
+        currentPage = 0;
+        await LoadProductsAsync();
+    }
+
+    private async Task PrevPageAsync()
+    {
+        if (currentPage > 0)
+        {
+            currentPage--;
+            await LoadProductsAsync();
+        }
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (currentPage + 1 < totalPages)
+        {
+            currentPage++;
+            await LoadProductsAsync();
+        }
+    }
+
+    private async Task AddToCartAsync(int itemId, decimal price)
+    {
+        isAddingToCart = true;
+        lastAddedProductId = itemId;
+
+        try
+        {
+            string buyerId = await GetBuyerIdAsync();
+            await BasketService.AddItemToBasketAsync(buyerId, itemId, price);
+
+            showAddedToast = true;
+            StateHasChanged();
+
+            // Auto-dismiss toast after 3 seconds
+            await Task.Delay(3000);
+            showAddedToast = false;
+            StateHasChanged();
+        }
+        finally
+        {
+            isAddingToCart = false;
+        }
+    }
+
+    private async Task LoadProductsAsync()
+    {
+        isLoading = true;
+
+        int? brandId = selectedBrand == 0 ? null : selectedBrand;
+        int? typeId = selectedType == 0 ? null : selectedType;
+
+        var result = await CatalogService.GetCatalogItemsAsync(
+            currentPage, PageSize, brandId, typeId, searchQuery);
+
+        products = result.Items;
+        total = result.TotalItems;
+        totalPages = Math.Max(1, (int)Math.Ceiling((double)total / PageSize));
+
+        isLoading = false;
+    }
+
+    private async Task<string> GetBuyerIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+            return user.Identity.Name ?? Guid.NewGuid().ToString();
+
+        // For anonymous users, generate a GUID
+        // In production, use a scoped service that persists across requests
+        return Guid.NewGuid().ToString();
+    }
+}

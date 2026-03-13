@@ -1,0 +1,118 @@
+@page "/basket"
+@using Microsoft.AspNetCore.Components.Web
+@inject BasketService BasketService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@rendermode @(new InteractiveServerRenderMode())
+
+<PageTitle>Shopping Cart - eShopLegacy</PageTitle>
+
+<div class="container">
+    <h2>Shopping Cart</h2>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status"></div>
+        </div>
+    }
+    else if (basket == null || !basket.Items.Any())
+    {
+        <div class="alert alert-info">Your cart is empty.</div>
+        <a href="/catalog" class="btn btn-primary">Continue Shopping</a>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in basket.Items)
+                {
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td>@item.UnitPrice.ToString("C")</td>
+                        <td>
+                            <input type="number" class="form-control" style="width: 80px;" 
+                                   value="@item.Quantity" 
+                                   @onchange="@(async (ChangeEventArgs e) => await UpdateQuantityAsync(item.Id, int.Parse(e.Value?.ToString() ?? "1")))" 
+                                   min="1" />
+                        </td>
+                        <td>@((item.UnitPrice * item.Quantity).ToString("C"))</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" @onclick="() => RemoveItemAsync(item.Id)">Remove</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                    <td><strong>@total.ToString("C")</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="d-flex justify-content-between">
+            <a href="/catalog" class="btn btn-secondary">Continue Shopping</a>
+            <a href="/checkout" class="btn btn-primary">Proceed to Checkout</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Basket? basket;
+    private decimal total = 0;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBasketAsync();
+    }
+
+    private async Task LoadBasketAsync()
+    {
+        isLoading = true;
+
+        string buyerId = await GetBuyerIdAsync();
+        basket = await BasketService.GetBasketAsync(buyerId);
+
+        if (basket != null)
+        {
+            total = basket.Items.Sum(i => i.UnitPrice * i.Quantity);
+        }
+
+        isLoading = false;
+    }
+
+    private async Task UpdateQuantityAsync(int basketItemId, int quantity)
+    {
+        await BasketService.UpdateBasketItemAsync(basketItemId, quantity);
+        await LoadBasketAsync();
+    }
+
+    private async Task RemoveItemAsync(int basketItemId)
+    {
+        await BasketService.RemoveItemFromBasketAsync(basketItemId);
+        await LoadBasketAsync();
+    }
+
+    private async Task<string> GetBuyerIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+            return user.Identity.Name ?? Guid.NewGuid().ToString();
+
+        return Guid.NewGuid().ToString();
+    }
+}
