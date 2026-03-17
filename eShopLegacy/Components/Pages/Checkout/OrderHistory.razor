@@ -1,0 +1,50 @@
+@page "/Checkout/OrderHistory"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject OrderService OrderService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Order History - eShop</PageTitle>
+
+<h2>My Orders</h2>
+
+@if (!_orders.Any())
+{
+    <div class="alert alert-info">You have no orders yet.</div>
+    <a href="/Catalog" class="btn btn-primary">Browse Catalog</a>
+}
+else
+{
+    @foreach (var order in _orders)
+    {
+        <div class="card mb-3">
+            <div class="card-header">
+                <strong>Order #@order.Id</strong> - @order.OrderDate.ToString("MMM dd, yyyy")
+                <span class="badge bg-primary float-end">@order.Status</span>
+            </div>
+            <div class="card-body">
+                <p><strong>Total:</strong> $@order.Total.ToString("0.00")</p>
+                <p><strong>Ship to:</strong> @order.Street, @order.City, @order.State @order.ZipCode, @order.Country</p>
+                <h6>Items:</h6>
+                <ul class="list-unstyled">
+                    @foreach (var item in order.OrderItems)
+                    {
+                        <li>@item.ProductName x @item.Units - $@((item.UnitPrice * item.Units).ToString("0.00"))</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<Order> _orders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var username = authState.User.Identity!.Name!;
+
+        _orders = await OrderService.GetOrdersForBuyerAsync(username);
+    }
+}

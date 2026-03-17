@@ -1,0 +1,67 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject SignInManager<ApplicationUser> SignInManager
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark eshop-navbar">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <img src="/images/eshop-logo.svg" height="32" alt="" class="me-2" onerror="this.style.display='none'" />
+            eShop
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/Catalog">Catalog</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                <li class="nav-item me-3">
+                    <a class="nav-link position-relative" href="/Cart/ShoppingCart">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                        </svg>
+                    </a>
+                </li>
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
+                                Welcome, @context.User.Identity!.Name
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="/Checkout/OrderHistory">My Orders</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li><button class="dropdown-item" @onclick="SignOutAsync">Sign Out</button></li>
+                            </ul>
+                        </li>
+                    </Authorized>
+                    <NotAuthorized>
+                        <li class="nav-item"><a class="nav-link" href="/Account/Login">Sign In</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/Account/Register">Register</a></li>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container my-4">
+    @Body
+</main>
+
+<footer class="footer bg-dark text-white py-3 mt-auto">
+    <div class="container text-center">
+        <small>eShop on .NET 8 &mdash; Blazor Web App</small>
+    </div>
+</footer>
+
+@code {
+    private async Task SignOutAsync()
+    {
+        await SignInManager.SignOutAsync();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}

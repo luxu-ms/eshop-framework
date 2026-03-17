@@ -1,0 +1,44 @@
+@page "/Checkout/OrderComplete"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject OrderService OrderService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Order Complete - eShop</PageTitle>
+
+<div class="text-center">
+    <h2 class="text-success">✓ Order Placed Successfully!</h2>
+    <p class="lead">Thank you for your order.</p>
+    
+    @if (_order != null)
+    {
+        <div class="alert alert-info">
+            <p><strong>Order #@_order.Id</strong></p>
+            <p>Order Date: @_order.OrderDate.ToString("MMM dd, yyyy hh:mm tt")</p>
+            <p>Total: $@_order.Total.ToString("0.00")</p>
+        </div>
+        
+        <a href="/Checkout/OrderHistory" class="btn btn-primary">View Order History</a>
+        <a href="/Catalog" class="btn btn-outline-primary">Continue Shopping</a>
+    }
+    else
+    {
+        <div class="alert alert-warning">Order not found.</div>
+        <a href="/" class="btn btn-primary">Go Home</a>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "orderId")]
+    public int OrderId { get; set; }
+
+    private Order? _order;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (OrderId > 0)
+        {
+            _order = await OrderService.GetOrderAsync(OrderId);
+        }
+    }
+}

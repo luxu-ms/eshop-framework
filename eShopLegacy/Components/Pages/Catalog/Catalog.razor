@@ -1,0 +1,151 @@
+@page "/Catalog"
+@rendermode InteractiveServer
+@inject CatalogService CatalogService
+@inject NavigationManager Navigation
+
+<PageTitle>Catalog - eShop</PageTitle>
+
+<h2>Catalog</h2>
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <label for="brandFilter">Brand:</label>
+        <select id="brandFilter" class="form-select" @bind="_selectedBrand" @bind:after="ApplyFilterAsync">
+            <option value="0">All Brands</option>
+            @foreach (var brand in _brands)
+            {
+                <option value="@brand.Id">@brand.Brand</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label for="typeFilter">Type:</label>
+        <select id="typeFilter" class="form-select" @bind="_selectedType" @bind:after="ApplyFilterAsync">
+            <option value="0">All Types</option>
+            @foreach (var type in _types)
+            {
+                <option value="@type.Id">@type.Type</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label for="search">Search:</label>
+        <div class="input-group">
+            <input type="text" id="search" class="form-control" @bind="_search" placeholder="Search products..." />
+            <button class="btn btn-primary" @onclick="ApplyFilterAsync">Search</button>
+        </div>
+    </div>
+</div>
+
+@if (!_items.Any())
+{
+    <div class="alert alert-info">No products found.</div>
+}
+else
+{
+    <div class="row">
+        @foreach (var item in _items)
+        {
+            <div class="col-md-3 mb-4">
+                <div class="card h-100">
+                    <img src="@item.PictureUri" class="card-img-top" alt="@item.Name" />
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Name</h5>
+                        <p class="card-text text-muted small">@item.CatalogBrand?.Brand - @item.CatalogType?.Type</p>
+                        <p class="card-text">$@item.Price.ToString("0.00")</p>
+                        <a href="/Catalog/ProductDetail?id=@item.Id" class="btn btn-primary w-100">View Details</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (_totalPages > 1)
+    {
+        <nav>
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(_page == 0 ? "disabled" : "")">
+                    <a class="page-link" href="@BuildUrl(_page - 1)">Previous</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">Page @(_page + 1) of @_totalPages</span>
+                </li>
+                <li class="page-item @((_page + 1) >= _totalPages ? "disabled" : "")">
+                    <a class="page-link" href="@BuildUrl(_page + 1)">Next</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "page")]
+    public int Page { get; set; } = 0;
+
+    [SupplyParameterFromQuery(Name = "brand")]
+    public int Brand { get; set; } = 0;
+
+    [SupplyParameterFromQuery(Name = "type")]
+    public int Type { get; set; } = 0;
+
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? Q { get; set; }
+
+    private List<CatalogBrand> _brands = new();
+    private List<CatalogType> _types = new();
+    private List<CatalogItem> _items = new();
+    private int _totalItems;
+    private int _totalPages;
+    private int _page;
+    private int _selectedBrand;
+    private int _selectedType;
+    private string? _search;
+    private const int PageSize = 8;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _brands = await CatalogService.GetCatalogBrandsAsync();
+        _types = await CatalogService.GetCatalogTypesAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _page = Math.Max(0, Page);
+        _selectedBrand = Brand;
+        _selectedType = Type;
+        _search = Q;
+
+        await LoadProductsAsync();
+    }
+
+    private async Task LoadProductsAsync()
+    {
+        int? brandId = _selectedBrand == 0 ? null : _selectedBrand;
+        int? typeId = _selectedType == 0 ? null : _selectedType;
+
+        var result = await CatalogService.GetCatalogItemsAsync(_page, PageSize, brandId, typeId, _search);
+        _items = result.Items;
+        _totalItems = result.TotalItems;
+        _totalPages = Math.Max(1, (int)Math.Ceiling((double)_totalItems / PageSize));
+    }
+
+    private async Task ApplyFilterAsync()
+    {
+        var queryParams = new Dictionary<string, object?>();
+        if (_selectedBrand > 0) queryParams["brand"] = _selectedBrand;
+        if (_selectedType > 0) queryParams["type"] = _selectedType;
+        if (!string.IsNullOrEmpty(_search)) queryParams["q"] = _search;
+
+        Navigation.NavigateTo(Navigation.GetUriWithQueryParameters(queryParams));
+    }
+
+    private string BuildUrl(int page)
+    {
+        var queryParams = new Dictionary<string, object?> { ["page"] = page };
+        if (_selectedBrand > 0) queryParams["brand"] = _selectedBrand;
+        if (_selectedType > 0) queryParams["type"] = _selectedType;
+        if (!string.IsNullOrEmpty(_search)) queryParams["q"] = _search;
+
+        return Navigation.GetUriWithQueryParameters(queryParams);
+    }
+}

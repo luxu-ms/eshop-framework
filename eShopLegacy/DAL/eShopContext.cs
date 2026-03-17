@@ -1,21 +1,12 @@
-using System.Data.Entity;
-using Microsoft.AspNet.Identity.EntityFramework;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using eShopLegacy.Models;
 
 namespace eShopLegacy.DAL
 {
     public class eShopContext : IdentityDbContext<ApplicationUser>
     {
-        public eShopContext()
-            : base("eShopContext")
-        {
-            Configuration.LazyLoadingEnabled = false;
-        }
-
-        public static eShopContext Create()
-        {
-            return new eShopContext();
-        }
+        public eShopContext(DbContextOptions<eShopContext> options) : base(options) { }
 
         public DbSet<CatalogItem>  CatalogItems  { get; set; }
         public DbSet<CatalogBrand> CatalogBrands { get; set; }
@@ -25,29 +16,29 @@ namespace eShopLegacy.DAL
         public DbSet<Order>        Orders        { get; set; }
         public DbSet<OrderItem>    OrderItems    { get; set; }
 
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<CatalogItem>()
-                .HasRequired(c => c.CatalogBrand)
+                .HasOne(c => c.CatalogBrand)
                 .WithMany()
                 .HasForeignKey(c => c.CatalogBrandId)
-                .WillCascadeOnDelete(false);
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<CatalogItem>()
-                .HasRequired(c => c.CatalogType)
+                .HasOne(c => c.CatalogType)
                 .WithMany()
                 .HasForeignKey(c => c.CatalogTypeId)
-                .WillCascadeOnDelete(false);
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<BasketItem>()
-                .HasRequired(b => b.Basket)
+                .HasOne(b => b.Basket)
                 .WithMany(b => b.Items)
                 .HasForeignKey(b => b.BasketId);
 
             modelBuilder.Entity<OrderItem>()
-                .HasRequired(o => o.Order)
+                .HasOne(o => o.Order)
                 .WithMany(o => o.OrderItems)
                 .HasForeignKey(o => o.OrderId);
         }

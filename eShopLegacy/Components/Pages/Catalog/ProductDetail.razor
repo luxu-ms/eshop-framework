@@ -1,0 +1,106 @@
+@page "/Catalog/ProductDetail"
+@rendermode InteractiveServer
+@inject CatalogService CatalogService
+@inject BasketService BasketService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>@(_item?.Name ?? "Product") - eShop</PageTitle>
+
+@if (_item == null)
+{
+    <div class="alert alert-warning">Product not found.</div>
+}
+else
+{
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/Catalog">Catalog</a></li>
+            <li class="breadcrumb-item active">@_item.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-6">
+            <img src="@_item.PictureUri" class="img-fluid" alt="@_item.Name" onerror="this.src='/images/placeholder.png'" />
+        </div>
+        <div class="col-md-6">
+            <h2>@_item.Name</h2>
+            <p class="text-muted">@_item.CatalogBrand?.Brand - @_item.CatalogType?.Type</p>
+            <h3 class="text-primary">$@_item.Price.ToString("0.00")</h3>
+            <p>@_item.Description</p>
+            <p>
+                @if (_item.AvailableStock > 0)
+                {
+                    <span class="badge bg-success">In Stock (@_item.AvailableStock available)</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Out of Stock</span>
+                }
+            </p>
+            @if (_item.AvailableStock > 0)
+            {
+                <button class="btn btn-primary btn-lg w-100" @onclick="AddToCartAsync">Add to Cart</button>
+            }
+            @if (_showSuccess)
+            {
+                <div class="alert alert-success mt-3">Item added to cart!</div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "id")]
+    public int Id { get; set; }
+
+    private CatalogItem? _item;
+    private bool _showSuccess;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id > 0)
+        {
+            _item = await CatalogService.GetCatalogItemAsync(Id);
+        }
+        _showSuccess = false;
+    }
+
+    private async Task AddToCartAsync()
+    {
+        if (_item == null) return;
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        string buyerId;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            buyerId = user.Identity.Name!;
+        }
+        else
+        {
+            buyerId = GetAnonymousBuyerId();
+        }
+
+        await BasketService.AddItemToBasketAsync(buyerId, _item.Id, _item.Price, 1);
+        _showSuccess = true;
+    }
+
+    private string GetAnonymousBuyerId()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext == null) return Guid.NewGuid().ToString();
+
+        string? buyerId = httpContext.Session.GetString("BuyerId");
+        if (string.IsNullOrEmpty(buyerId))
+        {
+            buyerId = Guid.NewGuid().ToString();
+            httpContext.Session.SetString("BuyerId", buyerId);
+        }
+        return buyerId;
+    }
+}

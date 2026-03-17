@@ -1,0 +1,170 @@
+@page "/Checkout/Checkout"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject BasketService BasketService
+@inject OrderService OrderService
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Checkout - eShop</PageTitle>
+
+<h2>Checkout</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <EditForm Model="_model" OnValidSubmit="PlaceOrderAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <h4>Shipping Address</h4>
+            <div class="mb-3">
+                <label for="street" class="form-label">Street</label>
+                <InputText id="street" class="form-control" @bind-Value="_model.Street" />
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="city" class="form-label">City</label>
+                    <InputText id="city" class="form-control" @bind-Value="_model.City" />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="state" class="form-label">State</label>
+                    <InputText id="state" class="form-control" @bind-Value="_model.State" />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="zip" class="form-label">Zip</label>
+                    <InputText id="zip" class="form-control" @bind-Value="_model.ZipCode" />
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="country" class="form-label">Country</label>
+                <InputText id="country" class="form-control" @bind-Value="_model.Country" />
+            </div>
+
+            <h4 class="mt-4">Payment Information</h4>
+            <div class="mb-3">
+                <label for="cardNumber" class="form-label">Card Number</label>
+                <InputText id="cardNumber" class="form-control" @bind-Value="_model.CardNumber" />
+            </div>
+            <div class="mb-3">
+                <label for="cardHolder" class="form-label">Card Holder Name</label>
+                <InputText id="cardHolder" class="form-control" @bind-Value="_model.CardHolderName" />
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="expiry" class="form-label">Expiry (MM/YY)</label>
+                    <InputText id="expiry" class="form-control" @bind-Value="_model.CardExpiry" placeholder="12/25" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="cvv" class="form-label">CVV</label>
+                    <InputText id="cvv" class="form-control" @bind-Value="_model.CardSecurityNumber" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100">Place Order</button>
+        </EditForm>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Order Summary</h5>
+                @foreach (var item in _summaryItems)
+                {
+                    <div class="d-flex justify-content-between">
+                        <span>@item.ProductName x @item.Quantity</span>
+                        <span>$@((item.UnitPrice * item.Quantity).ToString("0.00"))</span>
+                    </div>
+                }
+                <hr />
+                <div class="d-flex justify-content-between">
+                    <strong>Total:</strong>
+                    <strong>$@_total.ToString("0.00")</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CheckoutModel _model = new();
+    private List<BasketItem> _summaryItems = new();
+    private decimal _total;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var username = authState.User.Identity!.Name!;
+
+        var user = await UserManager.FindByNameAsync(username);
+        if (user != null)
+        {
+            _model.Street = user.Street ?? "";
+            _model.City = user.City ?? "";
+            _model.State = user.State ?? "";
+            _model.ZipCode = user.ZipCode ?? "";
+            _model.Country = user.Country ?? "";
+        }
+
+        var basket = await BasketService.GetBasketAsync(username);
+        if (basket == null || !basket.Items.Any())
+        {
+            Navigation.NavigateTo("/Cart/ShoppingCart");
+            return;
+        }
+
+        _summaryItems = basket.Items.ToList();
+        _total = _summaryItems.Sum(i => i.UnitPrice * i.Quantity);
+    }
+
+    private async Task PlaceOrderAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var username = authState.User.Identity!.Name!;
+
+        DateTime cardExp = DateTime.UtcNow.AddYears(1);
+        if (!string.IsNullOrEmpty(_model.CardExpiry))
+        {
+            if (!DateTime.TryParseExact("01/" + _model.CardExpiry, "dd/MM/yy",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out cardExp))
+            {
+                cardExp = DateTime.UtcNow.AddYears(1);
+            }
+        }
+
+        var address = new Address
+        {
+            Street = _model.Street,
+            City = _model.City,
+            State = _model.State,
+            ZipCode = _model.ZipCode,
+            Country = _model.Country
+        };
+
+        var order = await OrderService.CreateOrderFromBasketAsync(
+            username,
+            username,
+            address,
+            _model.CardNumber ?? "",
+            _model.CardHolderName ?? "",
+            cardExp,
+            _model.CardSecurityNumber ?? "",
+            1
+        );
+
+        Navigation.NavigateTo($"/Checkout/OrderComplete?orderId={order.Id}");
+    }
+
+    private class CheckoutModel
+    {
+        public string Street { get; set; } = "";
+        public string City { get; set; } = "";
+        public string State { get; set; } = "";
+        public string ZipCode { get; set; } = "";
+        public string Country { get; set; } = "";
+        public string? CardNumber { get; set; }
+        public string? CardHolderName { get; set; }
+        public string? CardExpiry { get; set; }
+        public string? CardSecurityNumber { get; set; }
+    }
+}

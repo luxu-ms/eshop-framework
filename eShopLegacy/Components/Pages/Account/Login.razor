@@ -1,0 +1,125 @@
+@page "/Account/Login"
+@rendermode InteractiveServer
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+@inject BasketService BasketService
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Sign In - eShop</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2>Sign In</h2>
+        
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <div class="alert alert-danger">@_errorMessage</div>
+        }
+
+        <EditForm Model="_model" OnValidSubmit="LoginAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <InputText id="email" class="form-control" @bind-Value="_model.Email" />
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" />
+            </div>
+
+            <div class="mb-3 form-check">
+                <InputCheckbox id="remember" class="form-check-input" @bind-Value="_model.RememberMe" />
+                <label for="remember" class="form-check-label">Remember me</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Sign In</button>
+        </EditForm>
+
+        <div class="mt-3">
+            <a href="/Account/Register">Don't have an account? Register</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "ReturnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    private LoginModel _model = new();
+    private string? _errorMessage;
+
+    protected override void OnInitialized()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext != null)
+        {
+            var rememberedEmail = httpContext.Request.Cookies["remember_email"];
+            if (!string.IsNullOrEmpty(rememberedEmail))
+            {
+                _model.Email = Uri.UnescapeDataString(rememberedEmail);
+                _model.RememberMe = true;
+            }
+        }
+    }
+
+    private async Task LoginAsync()
+    {
+        _errorMessage = null;
+
+        var user = await UserManager.FindByEmailAsync(_model.Email);
+        if (user == null)
+        {
+            _errorMessage = "Invalid email or password.";
+            return;
+        }
+
+        var result = await SignInManager.PasswordSignInAsync(user.UserName!, _model.Password, _model.RememberMe, lockoutOnFailure: false);
+        if (!result.Succeeded)
+        {
+            _errorMessage = "Invalid email or password.";
+            return;
+        }
+
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext != null)
+        {
+            if (_model.RememberMe)
+            {
+                httpContext.Response.Cookies.Append("remember_email", Uri.EscapeDataString(_model.Email), new CookieOptions
+                {
+                    Expires = DateTimeOffset.Now.AddDays(30),
+                    HttpOnly = true
+                });
+            }
+            else
+            {
+                httpContext.Response.Cookies.Delete("remember_email");
+            }
+
+            var anonymousBuyerId = httpContext.Session.GetString("BuyerId");
+            if (!string.IsNullOrEmpty(anonymousBuyerId))
+            {
+                await BasketService.TransferBasketAsync(anonymousBuyerId, user.UserName!);
+                httpContext.Session.Remove("BuyerId");
+            }
+        }
+
+        Navigation.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
+    }
+
+    private class LoginModel
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.EmailAddress]
+        public string Email { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Password { get; set; } = "";
+
+        public bool RememberMe { get; set; }
+    }
+}

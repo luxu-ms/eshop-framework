@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using eShopLegacy.Models;
 
@@ -17,11 +17,10 @@ namespace eShopLegacy.DAL
 
         // ── Catalog Items ──────────────────────────────────────────
 
-        public List<CatalogItem> GetCatalogItems(
+        public async Task<(List<CatalogItem> Items, int TotalItems)> GetCatalogItemsAsync(
             int pageIndex, int pageSize,
             int? brandId, int? typeId,
-            string searchText,
-            out int totalItems)
+            string? searchText)
         {
             IQueryable<CatalogItem> query = _context.CatalogItems
                 .Include(c => c.CatalogBrand)
@@ -36,65 +35,67 @@ namespace eShopLegacy.DAL
             if (!string.IsNullOrEmpty(searchText))
                 query = query.Where(c => c.Name.Contains(searchText) || c.Description.Contains(searchText));
 
-            totalItems = query.Count();
+            int totalItems = await query.CountAsync();
 
-            return query
+            var items = await query
                 .OrderBy(c => c.Name)
                 .Skip(pageIndex * pageSize)
                 .Take(pageSize)
-                .ToList();
+                .ToListAsync();
+
+            return (items, totalItems);
         }
 
-        public CatalogItem GetCatalogItem(int id)
+        public async Task<CatalogItem?> GetCatalogItemAsync(int id)
         {
-            return _context.CatalogItems
+            return await _context.CatalogItems
                 .Include(c => c.CatalogBrand)
                 .Include(c => c.CatalogType)
-                .FirstOrDefault(c => c.Id == id);
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public List<CatalogItem> GetCatalogItemsByName(string name)
+        public async Task<List<CatalogItem>> GetCatalogItemsByNameAsync(string name)
         {
-            return _context.CatalogItems
+            return await _context.CatalogItems
                 .Include(c => c.CatalogBrand)
                 .Include(c => c.CatalogType)
                 .Where(c => c.Name.Contains(name))
                 .OrderBy(c => c.Name)
-                .ToList();
+                .ToListAsync();
         }
 
-        public void AddCatalogItem(CatalogItem item)
+        public async Task AddCatalogItemAsync(CatalogItem item)
         {
             _context.CatalogItems.Add(item);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void UpdateCatalogItem(CatalogItem item)
+        public async Task UpdateCatalogItemAsync(CatalogItem item)
         {
             _context.Entry(item).State = EntityState.Modified;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void DeleteCatalogItem(int id)
+        public async Task DeleteCatalogItemAsync(int id)
         {
-            var item = _context.CatalogItems.Find(id);
+            var item = await _context.CatalogItems.FindAsync(id);
             if (item != null)
             {
                 _context.CatalogItems.Remove(item);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
         }
 
         // ── Brands & Types ─────────────────────────────────────────
 
-        public List<CatalogBrand> GetCatalogBrands()
+        public async Task<List<CatalogBrand>> GetCatalogBrandsAsync()
         {
-            return _context.CatalogBrands.OrderBy(b => b.Brand).ToList();
+            return await _context.CatalogBrands.OrderBy(b => b.Brand).ToListAsync();
         }
 
-        public List<CatalogType> GetCatalogTypes()
+        public async Task<List<CatalogType>> GetCatalogTypesAsync()
         {
-            return _context.CatalogTypes.OrderBy(t => t.Type).ToList();
+            return await _context.CatalogTypes.OrderBy(t => t.Type).ToListAsync();
         }
     }
 }

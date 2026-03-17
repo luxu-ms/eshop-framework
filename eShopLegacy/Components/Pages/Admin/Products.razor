@@ -1,0 +1,208 @@
+@page "/Admin/Products"
+@attribute [Authorize(Roles = "Admin")]
+@rendermode InteractiveServer
+@inject CatalogService CatalogService
+
+<PageTitle>Admin - Products - eShop</PageTitle>
+
+<h2>Product Management</h2>
+
+<button class="btn btn-success mb-3" @onclick="ShowAddForm">Add New Product</button>
+
+@if (_showForm)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>@(_editId == 0 ? "Add Product" : "Edit Product")</h5>
+        </div>
+        <div class="card-body">
+            <EditForm Model="_model" OnValidSubmit="SaveProductAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <InputText id="name" class="form-control" @bind-Value="_model.Name" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <InputText id="description" class="form-control" @bind-Value="_model.Description" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="price" class="form-label">Price</label>
+                    <InputNumber id="price" class="form-control" @bind-Value="_model.Price" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="brand" class="form-label">Brand</label>
+                    <InputSelect id="brand" class="form-select" @bind-Value="_model.CatalogBrandId">
+                        @foreach (var brand in _brands)
+                        {
+                            <option value="@brand.Id">@brand.Brand</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label for="type" class="form-label">Type</label>
+                    <InputSelect id="type" class="form-select" @bind-Value="_model.CatalogTypeId">
+                        @foreach (var type in _types)
+                        {
+                            <option value="@type.Id">@type.Type</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label for="stock" class="form-label">Available Stock</label>
+                    <InputNumber id="stock" class="form-control" @bind-Value="_model.AvailableStock" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" @onclick="CancelForm">Cancel</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Brand</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in _products)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.CatalogBrand?.Brand</td>
+                <td>@item.CatalogType?.Type</td>
+                <td>$@item.Price.ToString("0.00")</td>
+                <td>@item.AvailableStock</td>
+                <td>
+                    <button class="btn btn-sm btn-warning" @onclick="() => EditProduct(item)">Edit</button>
+                    <button class="btn btn-sm btn-danger" @onclick="() => DeleteProductAsync(item.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<CatalogItem> _products = new();
+    private List<CatalogBrand> _brands = new();
+    private List<CatalogType> _types = new();
+    private bool _showForm;
+    private int _editId;
+    private ProductFormModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _brands = await CatalogService.GetCatalogBrandsAsync();
+        _types = await CatalogService.GetCatalogTypesAsync();
+        var result = await CatalogService.GetCatalogItemsAsync(0, int.MaxValue, null, null, null);
+        _products = result.Items;
+    }
+
+    private void ShowAddForm()
+    {
+        _editId = 0;
+        _model = new ProductFormModel();
+        _showForm = true;
+    }
+
+    private void EditProduct(CatalogItem item)
+    {
+        _editId = item.Id;
+        _model = new ProductFormModel
+        {
+            Name = item.Name,
+            Description = item.Description ?? "",
+            Price = item.Price,
+            CatalogBrandId = item.CatalogBrandId,
+            CatalogTypeId = item.CatalogTypeId,
+            AvailableStock = item.AvailableStock
+        };
+        _showForm = true;
+    }
+
+    private void CancelForm()
+    {
+        _showForm = false;
+    }
+
+    private async Task SaveProductAsync()
+    {
+        if (_editId == 0)
+        {
+            var newItem = new CatalogItem
+            {
+                Name = _model.Name,
+                Description = _model.Description,
+                Price = _model.Price,
+                CatalogBrandId = _model.CatalogBrandId,
+                CatalogTypeId = _model.CatalogTypeId,
+                AvailableStock = _model.AvailableStock,
+                PictureFileName = "placeholder.png",
+                PictureUri = "/images/placeholder.png",
+                RestockThreshold = 10,
+                MaxStockThreshold = 200
+            };
+            await CatalogService.AddCatalogItemAsync(newItem);
+        }
+        else
+        {
+            var item = await CatalogService.GetCatalogItemAsync(_editId);
+            if (item != null)
+            {
+                item.Name = _model.Name;
+                item.Description = _model.Description;
+                item.Price = _model.Price;
+                item.CatalogBrandId = _model.CatalogBrandId;
+                item.CatalogTypeId = _model.CatalogTypeId;
+                item.AvailableStock = _model.AvailableStock;
+                await CatalogService.UpdateCatalogItemAsync(item);
+            }
+        }
+
+        _showForm = false;
+        await LoadDataAsync();
+    }
+
+    private async Task DeleteProductAsync(int id)
+    {
+        await CatalogService.DeleteCatalogItemAsync(id);
+        await LoadDataAsync();
+    }
+
+    private class ProductFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Name { get; set; } = "";
+
+        public string Description { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.Range(0.01, 10000)]
+        public decimal Price { get; set; }
+
+        public int CatalogBrandId { get; set; }
+
+        public int CatalogTypeId { get; set; }
+
+        public int AvailableStock { get; set; }
+    }
+}
