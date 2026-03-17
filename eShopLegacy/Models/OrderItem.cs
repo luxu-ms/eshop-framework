@@ -21,9 +21,9 @@ namespace eShopLegacy.Models
 
         public int Units { get; set; }
 
-        public string PictureUrl { get; set; }
+        public string? PictureUrl { get; set; }
 
-        public virtual Order Order { get; set; }
+        public virtual Order? Order { get; set; }
 
         [ForeignKey("ProductId")]
         public virtual CatalogItem CatalogItem { get; set; }

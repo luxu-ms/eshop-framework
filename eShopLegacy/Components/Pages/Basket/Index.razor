@@ -3,7 +3,7 @@
 @inject BasketService BasketService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
-@rendermode @(new InteractiveServerRenderMode())
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Shopping Cart - eShopLegacy</PageTitle>
 
@@ -82,7 +82,13 @@
     {
         isLoading = true;
 
-        string buyerId = await GetBuyerIdAsync();
+        var buyerId = await GetBuyerIdAsync();
+        if (buyerId == null)
+        {
+            Nav.NavigateTo("/account/login?returnUrl=/basket");
+            return;
+        }
+
         basket = await BasketService.GetBasketAsync(buyerId);
 
         if (basket != null)
@@ -105,14 +111,15 @@
         await LoadBasketAsync();
     }
 
-    private async Task<string> GetBuyerIdAsync()
+    private async Task<string?> GetBuyerIdAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated == true)
-            return user.Identity.Name ?? Guid.NewGuid().ToString();
+            return user.FindFirst(
+                c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-        return Guid.NewGuid().ToString();
+        return null;
     }
 }

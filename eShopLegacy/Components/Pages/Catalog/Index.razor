@@ -5,7 +5,7 @@
 @inject BasketService BasketService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
-@rendermode @(new InteractiveServerRenderMode())
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Catalog - eShopLegacy</PageTitle>
 
@@ -50,6 +50,13 @@
             </div>
         </div>
     }
+    else if (!string.IsNullOrEmpty(cartError))
+    {
+        <div class="alert alert-danger alert-dismissible">
+            @cartError
+            <button type="button" class="btn-close" @onclick="() => cartError = null"></button>
+        </div>
+    }
     else if (products.Count == 0)
     {
         <div class="alert alert-info">No products found.</div>
@@ -61,12 +68,19 @@
             {
                 <div class="col-md-3 mb-4">
                     <div class="card h-100">
-                        <img src="@(product.PictureUri ?? "/images/placeholder.png")" class="card-img-top" alt="@product.Name" />
-                        <div class="card-body">
-                            <h5 class="card-title">@product.Name</h5>
-                            <p class="card-text text-muted">@product.Description</p>
-                            <p class="card-text"><strong>@product.Price.ToString("C")</strong></p>
-                            <button class="btn btn-primary w-100" @onclick="() => AddToCartAsync(product.Id, product.Price)" disabled="@isAddingToCart">
+                        <a href="/catalog/@product.Id">
+                            <img src="@(product.PictureUri ?? "/images/placeholder.png")" class="card-img-top" alt="@product.Name"
+                                 onerror="this.onerror=null;this.src='/Content/placeholder.png';" />
+                        </a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">
+                                <a href="/catalog/@product.Id" class="text-dark text-decoration-none">@product.Name</a>
+                            </h5>
+                            <p class="card-text text-muted small flex-grow-1">
+                                @product.CatalogBrand?.Brand &mdash; @product.CatalogType?.Type
+                            </p>
+                            <p class="card-text"><strong class="text-success">$@product.Price.ToString("0.00")</strong></p>
+                            <button class="btn btn-primary btn-sm w-100" @onclick="() => AddToCartAsync(product.Id, product.Price)" disabled="@isAddingToCart">
                                 @if (isAddingToCart && lastAddedProductId == product.Id)
                                 {
                                     <span class="spinner-border spinner-border-sm me-1" role="status"></span>
@@ -127,6 +141,7 @@
     private bool isAddingToCart = false;
     private int lastAddedProductId = 0;
     private bool showAddedToast = false;
+    private string? cartError;
 
     private List<CatalogBrand> brands = new();
     private List<CatalogType> types = new();
@@ -166,21 +181,28 @@
 
     private async Task AddToCartAsync(int itemId, decimal price)
     {
+        cartError = null;
+        var buyerId = await GetBuyerIdAsync();
+        if (buyerId == null)
+        {
+            Nav.NavigateTo($"/account/login?returnUrl=/catalog");
+            return;
+        }
+
         isAddingToCart = true;
         lastAddedProductId = itemId;
 
         try
         {
-            string buyerId = await GetBuyerIdAsync();
             await BasketService.AddItemToBasketAsync(buyerId, itemId, price);
-
             showAddedToast = true;
             StateHasChanged();
-
-            // Auto-dismiss toast after 3 seconds
             await Task.Delay(3000);
             showAddedToast = false;
-            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            cartError = $"Could not add item to cart: {ex.Message}";
         }
         finally
         {
@@ -205,16 +227,15 @@
         isLoading = false;
     }
 
-    private async Task<string> GetBuyerIdAsync()
+    private async Task<string?> GetBuyerIdAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated == true)
-            return user.Identity.Name ?? Guid.NewGuid().ToString();
+            return user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                   ?? user.Identity.Name;
 
-        // For anonymous users, generate a GUID
-        // In production, use a scoped service that persists across requests
-        return Guid.NewGuid().ToString();
+        return null;   // Not authenticated — caller redirects to login
     }
 }

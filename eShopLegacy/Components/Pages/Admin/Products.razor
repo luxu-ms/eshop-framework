@@ -1,0 +1,223 @@
+@page "/admin/products"
+@attribute [Authorize]
+@inject CatalogService CatalogService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Admin - Products - eShopLegacy</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-6 fw-bold mb-0">Product Management</h1>
+    <button class="btn btn-success" @onclick="ShowAddForm">+ New Product</button>
+</div>
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success alert-dismissible">
+        @successMessage
+        <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+    </div>
+}
+
+@if (showForm)
+{
+    <div class="card mb-4">
+        <div class="card-header fw-semibold">@(editId == 0 ? "Add Product" : "Edit Product")</div>
+        <div class="card-body">
+            <EditForm Model="formModel" OnValidSubmit="SaveAsync">
+                <DataAnnotationsValidator />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Name</label>
+                        <InputText @bind-Value="formModel.Name" class="form-control" />
+                        <ValidationMessage For="() => formModel.Name" class="text-danger small" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Price</label>
+                        <InputNumber @bind-Value="formModel.Price" class="form-control" />
+                        <ValidationMessage For="() => formModel.Price" class="text-danger small" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <InputTextArea @bind-Value="formModel.Description" class="form-control" rows="3" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Brand</label>
+                        <InputSelect @bind-Value="formModel.BrandId" class="form-select">
+                            @foreach (var b in brands)
+                            {
+                                <option value="@b.Id">@b.Brand</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Type</label>
+                        <InputSelect @bind-Value="formModel.TypeId" class="form-select">
+                            @foreach (var t in types)
+                            {
+                                <option value="@t.Id">@t.Type</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Available Stock</label>
+                        <InputNumber @bind-Value="formModel.Stock" class="form-control" />
+                    </div>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-outline-secondary" @onclick="CancelForm">Cancel</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div class="table-responsive">
+    <table class="table table-hover table-bordered align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th style="width:50px">ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Brand</th>
+                <th>Type</th>
+                <th>Stock</th>
+                <th style="width:130px">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (products == null)
+            {
+                <tr>
+                    <td colspan="7" class="text-center">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var p in products)
+                {
+                    <tr>
+                        <td>@p.Id</td>
+                        <td>@p.Name</td>
+                        <td>$@p.Price.ToString("0.00")</td>
+                        <td>@p.CatalogBrand?.Brand</td>
+                        <td>@p.CatalogType?.Type</td>
+                        <td>@p.AvailableStock</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditProduct(p)">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteAsync(p.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<CatalogItem>? products;
+    private List<CatalogBrand> brands = new();
+    private List<CatalogType> types = new();
+    private bool showForm;
+    private int editId;
+    private string? successMessage;
+    private ProductForm formModel = new();
+
+    protected override async Task OnInitializedAsync()
+        => await LoadDataAsync();
+
+    private async Task LoadDataAsync()
+    {
+        var (items, _) = await CatalogService.GetCatalogItemsAsync(0, int.MaxValue, null, null, null);
+        products = items;
+        brands   = await CatalogService.GetCatalogBrandsAsync();
+        types    = await CatalogService.GetCatalogTypesAsync();
+    }
+
+    private void ShowAddForm()
+    {
+        editId    = 0;
+        formModel = new ProductForm
+        {
+            BrandId = brands.FirstOrDefault()?.Id ?? 0,
+            TypeId  = types.FirstOrDefault()?.Id  ?? 0
+        };
+        showForm = true;
+    }
+
+    private void EditProduct(CatalogItem p)
+    {
+        editId    = p.Id;
+        formModel = new ProductForm
+        {
+            Name        = p.Name,
+            Price       = p.Price,
+            Description = p.Description ?? "",
+            BrandId     = p.CatalogBrandId,
+            TypeId      = p.CatalogTypeId,
+            Stock       = p.AvailableStock
+        };
+        showForm = true;
+    }
+
+    private void CancelForm() => showForm = false;
+
+    private async Task SaveAsync()
+    {
+        if (editId == 0)
+        {
+            var item = new CatalogItem
+            {
+                Name           = formModel.Name,
+                Price          = formModel.Price,
+                Description    = formModel.Description,
+                CatalogBrandId = formModel.BrandId,
+                CatalogTypeId  = formModel.TypeId,
+                AvailableStock = formModel.Stock
+            };
+            await CatalogService.AddCatalogItemAsync(item);
+            successMessage = $"Product '{item.Name}' added successfully.";
+        }
+        else
+        {
+            var item = await CatalogService.GetCatalogItemAsync(editId);
+            if (item != null)
+            {
+                item.Name           = formModel.Name;
+                item.Price          = formModel.Price;
+                item.Description    = formModel.Description;
+                item.CatalogBrandId = formModel.BrandId;
+                item.CatalogTypeId  = formModel.TypeId;
+                item.AvailableStock = formModel.Stock;
+                await CatalogService.UpdateCatalogItemAsync(item);
+                successMessage = $"Product '{item.Name}' updated successfully.";
+            }
+        }
+
+        showForm = false;
+        await LoadDataAsync();
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        await CatalogService.DeleteCatalogItemAsync(id);
+        successMessage = "Product deleted.";
+        await LoadDataAsync();
+    }
+
+    private sealed class ProductForm
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Name is required.")]
+        public string Name { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Range(0.01, 100000, ErrorMessage = "Enter a valid price.")]
+        public decimal Price { get; set; }
+
+        public string Description { get; set; } = "";
+        public int BrandId { get; set; }
+        public int TypeId  { get; set; }
+        public int Stock   { get; set; }
+    }
+}

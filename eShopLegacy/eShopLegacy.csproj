@@ -38,4 +38,10 @@
     <Content Include="**\*.aspx" />
     <Content Include="**\*.Master" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Account\" />
+    <Folder Include="Admin\" />
+    <Folder Include="Checkout\" />
+  </ItemGroup>
 </Project>

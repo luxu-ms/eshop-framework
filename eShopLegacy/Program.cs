@@ -1,6 +1,7 @@
 using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -61,5 +62,24 @@ app.UseAntiforgery();           // Required by Blazor
 // ─── Endpoint Mapping ─────────────────────────────────────────────────────────
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// ─── Logout endpoints ─────────────────────────────────────────────────────────
+// POST  — triggered by the logout button (form submit); signs out and redirects
+app.MapPost("/account/logout", async (SignInManager<ApplicationUser> signInManager) =>
+{
+    await signInManager.SignOutAsync();
+    return Results.Redirect("/");
+}).DisableAntiforgery();
+
+// GET — handles direct browser navigation to /account/logout (just redirect home)
+app.MapGet("/account/logout", () => Results.Redirect("/"));
+
+// ─── Database Initialization ──────────────────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<eShopContext>();
+    db.Database.Migrate();                        // Create / update schema
+    await CatalogContextSeed.SeedAsync(db);       // Seed sample data if empty
+}
 
 app.Run();

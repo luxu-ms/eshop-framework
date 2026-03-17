@@ -38,12 +38,12 @@ namespace eShopLegacy.Models
         [StringLength(25)]  public string CardNumber { get; set; }
         [StringLength(50)]  public string CardHolderName { get; set; }
         public DateTime     CardExpiration { get; set; }
-        [StringLength(3)]   public string CardSecurityNumber { get; set; }
+        [StringLength(4)]   public string? CardSecurityNumber { get; set; }
         public int          CardTypeId { get; set; }
 
         public decimal Total { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     }

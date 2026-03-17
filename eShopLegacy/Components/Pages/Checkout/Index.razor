@@ -1,0 +1,214 @@
+@page "/checkout"
+@attribute [Authorize]
+@inject BasketService BasketService
+@inject OrderService OrderService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Checkout - eShopLegacy</PageTitle>
+
+<h1 class="display-6 fw-bold mb-4">Checkout</h1>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (basket == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
+}
+else if (!basket.Items.Any())
+{
+    <div class="alert alert-info">
+        Your cart is empty. <a href="/catalog">Continue Shopping</a>
+    </div>
+}
+else
+{
+    <EditForm Model="form" OnValidSubmit="PlaceOrderAsync">
+        <DataAnnotationsValidator />
+        <div class="row g-4">
+
+            <!-- Left: Forms -->
+            <div class="col-lg-8">
+
+                <!-- Shipping Address -->
+                <div class="card mb-4">
+                    <div class="card-header fw-semibold">Shipping Address</div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Street address</label>
+                                <InputText @bind-Value="form.Street" class="form-control" placeholder="123 Main St" />
+                                <ValidationMessage For="() => form.Street" class="text-danger small" />
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">City</label>
+                                <InputText @bind-Value="form.City" class="form-control" />
+                                <ValidationMessage For="() => form.City" class="text-danger small" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">State / Province</label>
+                                <InputText @bind-Value="form.State" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">ZIP code</label>
+                                <InputText @bind-Value="form.ZipCode" class="form-control" />
+                                <ValidationMessage For="() => form.ZipCode" class="text-danger small" />
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">Country</label>
+                                <InputText @bind-Value="form.Country" class="form-control" />
+                                <ValidationMessage For="() => form.Country" class="text-danger small" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment -->
+                <div class="card mb-4">
+                    <div class="card-header fw-semibold">Payment Information</div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Card number</label>
+                                <InputText @bind-Value="form.CardNumber" class="form-control" placeholder="xxxx xxxx xxxx xxxx" />
+                                <ValidationMessage For="() => form.CardNumber" class="text-danger small" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Card holder name</label>
+                                <InputText @bind-Value="form.CardHolder" class="form-control" placeholder="Full name on card" />
+                                <ValidationMessage For="() => form.CardHolder" class="text-danger small" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Expiry (MM/YY)</label>
+                                <InputText @bind-Value="form.Expiry" class="form-control" placeholder="MM/YY" />
+                                <ValidationMessage For="() => form.Expiry" class="text-danger small" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">CVV</label>
+                                <InputText @bind-Value="form.CVV" class="form-control" type="password" placeholder="123" />
+                                <ValidationMessage For="() => form.CVV" class="text-danger small" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Order Summary -->
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top:80px">
+                    <div class="card-header fw-semibold">Order Summary</div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @foreach (var item in basket.Items)
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>@item.ProductName &times; @item.Quantity</span>
+                                    <strong>$@((item.UnitPrice * item.Quantity).ToString("0.00"))</strong>
+                                </li>
+                            }
+                            <li class="list-group-item d-flex justify-content-between fw-bold">
+                                <span>Total</span>
+                                <span class="text-success">$@basket.Items.Sum(i => i.UnitPrice * i.Quantity).ToString("0.00")</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-success w-100 btn-lg" disabled="@isSubmitting">
+                            @(isSubmitting ? "Placing Order..." : "Place Order")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private Basket? basket;
+    private CheckoutForm form = new();
+    private string? errorMessage;
+    private bool isSubmitting;
+    private string? userId;
+    private string? userName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        userId   = authState.User.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        userName = authState.User.Identity?.Name ?? "";
+
+        if (userId != null)
+            basket = await BasketService.GetBasketAsync(userId);
+    }
+
+    private async Task PlaceOrderAsync()
+    {
+        if (userId == null) return;
+
+        isSubmitting  = true;
+        errorMessage  = null;
+
+        try
+        {
+            DateTime expiry = DateTime.UtcNow.AddYears(1);
+            if (DateTime.TryParseExact(form.Expiry, "MM/yy",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var parsed))
+                expiry = parsed;
+
+            var order = await OrderService.CreateOrderFromBasketAsync(
+                userId, userName ?? "",
+                new Address
+                {
+                    Street  = form.Street,
+                    City    = form.City,
+                    State   = form.State,
+                    Country = form.Country,
+                    ZipCode = form.ZipCode
+                },
+                form.CardNumber, form.CardHolder, expiry, form.CVV, cardTypeId: 1);
+
+            Nav.NavigateTo($"/checkout/complete/{order.Id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            isSubmitting = false;
+        }
+    }
+
+    private sealed class CheckoutForm
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Street is required.")]
+        public string Street { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "City is required.")]
+        public string City { get; set; } = "";
+
+        public string State { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "ZIP code is required.")]
+        public string ZipCode { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Country is required.")]
+        public string Country { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Card number is required.")]
+        public string CardNumber { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Card holder name is required.")]
+        public string CardHolder { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Expiry is required.")]
+        public string Expiry { get; set; } = "";
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "CVV is required.")]
+        public string CVV { get; set; } = "";
+    }
+}

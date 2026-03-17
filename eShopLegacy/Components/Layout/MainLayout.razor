@@ -23,15 +23,27 @@
                                 <span class="nav-link">Hello, @context.User.Identity?.Name!</span>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" href="/Account/Logout">Logout</a>
+                                <a class="nav-link text-dark" href="/orders">My Orders</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="/admin/products">Admin</a>
+                            </li>
+                            <li class="nav-item">
+                                <form action="/account/logout" method="post" style="display:inline">
+                                    <button type="submit"
+                                            class="nav-link text-dark border-0 bg-transparent p-0"
+                                            style="cursor:pointer">
+                                        Logout
+                                    </button>
+                                </form>
                             </li>
                         </Authorized>
                         <NotAuthorized>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" href="/Account/Login">Login</a>
+                                <a class="nav-link text-dark" href="/account/login">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" href="/Account/Register">Register</a>
+                                <a class="nav-link text-dark" href="/account/register">Register</a>
                             </li>
                         </NotAuthorized>
                     </AuthorizeView>

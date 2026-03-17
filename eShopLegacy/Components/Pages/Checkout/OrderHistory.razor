@@ -1,0 +1,96 @@
+@page "/orders"
+@attribute [Authorize]
+@inject OrderService OrderService
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>My Orders - eShopLegacy</PageTitle>
+
+<h1 class="display-6 fw-bold mb-4">My Orders</h1>
+
+@if (orders == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
+}
+else if (!orders.Any())
+{
+    <div class="text-center py-5">
+        <p class="text-muted fs-5">You haven't placed any orders yet.</p>
+        <a href="/catalog" class="btn btn-primary">Browse Catalog</a>
+    </div>
+}
+else
+{
+    @foreach (var order in orders)
+    {
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>Order #@order.Id</strong>
+                    <span class="text-muted ms-3 small">@order.OrderDate.ToString("MMM d, yyyy h:mm tt")</span>
+                </div>
+                <span class="badge @GetStatusBadge(order.Status)">@order.Status</span>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-borderless mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Product</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Unit Price</th>
+                            <th class="text-end pe-3">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in order.OrderItems)
+                        {
+                            <tr>
+                                <td class="ps-3">@item.ProductName</td>
+                                <td class="text-center">@item.Units</td>
+                                <td class="text-end">$@item.UnitPrice.ToString("0.00")</td>
+                                <td class="text-end pe-3">$@((item.UnitPrice * item.Units - item.Discount).ToString("0.00"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold ps-3">Total</td>
+                            <td class="text-end fw-bold text-success pe-3">$@order.Total.ToString("0.00")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="card-footer text-muted small">
+                Ship to: @order.Street, @order.City, @order.State @order.ZipCode, @order.Country
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<Order>? orders;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(
+            c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        orders = userId != null
+            ? await OrderService.GetOrdersForBuyerAsync(userId)
+            : new List<Order>();
+    }
+
+    private static string GetStatusBadge(OrderStatus status) => status switch
+    {
+        OrderStatus.Submitted          => "bg-primary",
+        OrderStatus.AwaitingValidation => "bg-warning text-dark",
+        OrderStatus.StockConfirmed     => "bg-info text-dark",
+        OrderStatus.Paid               => "bg-success",
+        OrderStatus.Shipped            => "bg-success",
+        OrderStatus.Cancelled          => "bg-danger",
+        _                              => "bg-secondary"
+    };
+}

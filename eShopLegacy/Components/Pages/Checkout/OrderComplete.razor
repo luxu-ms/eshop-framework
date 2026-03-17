@@ -1,0 +1,75 @@
+@page "/checkout/complete/{OrderId:int}"
+@attribute [Authorize]
+@inject OrderService OrderService
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Order Confirmed - eShopLegacy</PageTitle>
+
+@if (order == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <div class="display-1 text-success mb-3">&#10003;</div>
+        <h1 class="display-5 fw-bold">Thank you for your order!</h1>
+        <p class="lead text-muted">Your order #<strong>@order.Id</strong> has been placed successfully.</p>
+        <p class="text-muted">Placed on @order.OrderDate.ToString("MMM d, yyyy h:mm tt")</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header fw-semibold">Order Items</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in order.OrderItems)
+                            {
+                                <tr>
+                                    <td>@item.ProductName</td>
+                                    <td class="text-center">@item.Units</td>
+                                    <td class="text-end">$@item.UnitPrice.ToString("0.00")</td>
+                                    <td class="text-end">$@((item.UnitPrice * item.Units).ToString("0.00"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="fw-bold">
+                                <td colspan="3" class="text-end">Order Total</td>
+                                <td class="text-end text-success">$@order.Total.ToString("0.00")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 justify-content-center mt-4">
+                <a href="/catalog" class="btn btn-primary">Continue Shopping</a>
+                <a href="/orders" class="btn btn-outline-secondary">View My Orders</a>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int OrderId { get; set; }
+
+    private Order? order;
+
+    protected override async Task OnInitializedAsync()
+    {
+        order = await OrderService.GetOrderAsync(OrderId);
+    }
+}
