@@ -3,7 +3,7 @@
   "operationId": "a8aa752e-dfb5-47d6-aced-e990f8f6b8eb",
   "description": "Migrate project/solution to Azure",
   "startTime": "2026-03-17T06:54:08.5878356Z",
-  "lastUpdateTime": "2026-03-17T07:55:30.9648578Z",
+  "lastUpdateTime": "2026-03-18T06:26:17.2636975Z",
   "stage": "Execution",
   "properties": {
     "SelectedScenarioStrategy": "AllAtOnce"

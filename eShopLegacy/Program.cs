@@ -52,6 +52,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddCascadingAuthenticationState();
+
 var app = builder.Build();
 
 // ── Middleware pipeline ───────────────────────────────────────────────────────
