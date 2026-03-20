@@ -1,0 +1,110 @@
+@page "/order-confirmation/{OrderId:int}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Authorization
+@inject OrderService OrderService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Order Confirmation</PageTitle>
+
+@if (order == null)
+{
+    <p class="text-muted">Loading order details...</p>
+}
+else
+{
+    <div class="text-center py-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="text-success mb-3" viewBox="0 0 16 16">
+            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.97 11.03a.75.75 0 0 0 1.07 0l3.992-4.99a.75.75 0 1 0-1.08-1.04L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03z"/>
+        </svg>
+        <h1 class="display-6 fw-bold text-success">Order Placed Successfully!</h1>
+        <p class="lead text-muted">Thank you for your purchase.</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order #@order.Id</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Date:</strong> @order.OrderDate.ToLocalTime().ToString("f")
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong>
+                            <span class="badge bg-info">@order.Status</span>
+                        </div>
+                    </div>
+
+                    <h6>Items</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in order.OrderItems)
+                            {
+                                <tr>
+                                    <td>@item.ProductName</td>
+                                    <td class="text-center">@item.Units</td>
+                                    <td class="text-end">$@item.UnitPrice.ToString("0.00")</td>
+                                    <td class="text-end">$@((item.UnitPrice * item.Units).ToString("0.00"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Total</td>
+                                <td class="text-end fw-bold text-success">$@order.Total.ToString("0.00")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6>Shipping Address</h6>
+                            <p class="mb-0">@order.Street<br />@order.City, @order.State @order.ZipCode<br />@order.Country</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="/catalog" class="btn btn-primary">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int OrderId { get; set; }
+
+    private Order order;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var buyerId = authState.User.Identity?.Name;
+
+        if (string.IsNullOrEmpty(buyerId))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        order = await OrderService.GetOrderAsync(OrderId, buyerId);
+        if (order == null)
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+}

@@ -1,0 +1,145 @@
+@page "/cart"
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Authorization
+@inject BasketService BasketService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Shopping Cart</PageTitle>
+
+<h1 class="display-6 fw-bold mb-4">Shopping Cart</h1>
+
+@if (isLoading)
+{
+    <p class="text-muted">Loading cart...</p>
+}
+else if (items == null || items.Count == 0)
+{
+    <div class="text-center py-5">
+        <p class="text-muted fs-5">Your cart is empty.</p>
+        <a href="/catalog" class="btn btn-primary">Continue Shopping</a>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Product</th>
+                    <th class="text-center">Price</th>
+                    <th class="text-center" style="width:140px">Quantity</th>
+                    <th class="text-end">Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="@(item.PictureUrl ?? "/Content/placeholder.png")"
+                                     width="56" height="56" class="rounded" alt="@item.ProductName" />
+                                <span class="fw-semibold">@item.ProductName</span>
+                            </div>
+                        </td>
+                        <td class="text-center">$@item.UnitPrice.ToString("0.00")</td>
+                        <td class="text-center">
+                            <div class="input-group input-group-sm justify-content-center" style="max-width:110px;margin:auto">
+                                <button class="btn btn-outline-secondary" @onclick="() => DecrementItem(item.Id, item.Quantity)">-</button>
+                                <span class="input-group-text">@item.Quantity</span>
+                                <button class="btn btn-outline-secondary" @onclick="() => IncrementItem(item.Id, item.Quantity)">+</button>
+                            </div>
+                        </td>
+                        <td class="text-end fw-bold">$@((item.UnitPrice * item.Quantity).ToString("0.00"))</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveItem(item.Id)">&times;</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Summary -->
+    <div class="row justify-content-end mt-3">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Order Summary</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal (@totalQuantity items)</span>
+                        <strong>$@subtotal.ToString("0.00")</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 text-muted">
+                        <span>Shipping</span>
+                        <span>Free</span>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between fw-bold fs-5">
+                        <span>Total</span>
+                        <span class="text-success">$@subtotal.ToString("0.00")</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-success w-100" @onclick="ProceedToCheckout">Proceed to Checkout</button>
+                    <a href="/catalog" class="btn btn-link w-100 text-center mt-1">Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private System.Collections.Generic.List<BasketItem> items;
+    private string buyerId;
+    private bool isLoading = true;
+
+    private int totalQuantity => items?.Sum(i => i.Quantity) ?? 0;
+    private decimal subtotal => items?.Sum(i => i.UnitPrice * i.Quantity) ?? 0;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        buyerId = await GetBuyerIdAsync();
+        await LoadCartAsync();
+        isLoading = false;
+    }
+
+    private async System.Threading.Tasks.Task LoadCartAsync()
+    {
+        var basket = await BasketService.GetBasketAsync(buyerId);
+        items = basket?.Items?.ToList() ?? new System.Collections.Generic.List<BasketItem>();
+    }
+
+    private async System.Threading.Tasks.Task IncrementItem(int basketItemId, int currentQty)
+    {
+        await BasketService.UpdateBasketItemAsync(basketItemId, currentQty + 1);
+        await LoadCartAsync();
+    }
+
+    private async System.Threading.Tasks.Task DecrementItem(int basketItemId, int currentQty)
+    {
+        await BasketService.UpdateBasketItemAsync(basketItemId, currentQty - 1);
+        await LoadCartAsync();
+    }
+
+    private async System.Threading.Tasks.Task RemoveItem(int basketItemId)
+    {
+        await BasketService.RemoveItemFromBasketAsync(basketItemId);
+        await LoadCartAsync();
+    }
+
+    private void ProceedToCheckout()
+    {
+        Navigation.NavigateTo("/checkout");
+    }
+
+    private async System.Threading.Tasks.Task<string> GetBuyerIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        return authState.User.Identity?.IsAuthenticated == true
+            ? authState.User.Identity.Name
+            : "anonymous";
+    }
+}

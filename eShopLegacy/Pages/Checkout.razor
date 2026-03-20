@@ -1,0 +1,225 @@
+@page "/checkout"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using System.ComponentModel.DataAnnotations
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Identity
+@inject BasketService BasketService
+@inject OrderService OrderService
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Checkout</PageTitle>
+
+<h1 class="display-6 fw-bold mb-4">Checkout</h1>
+
+@if (cartItems == null || cartItems.Count == 0)
+{
+    <div class="alert alert-warning">
+        Your cart is empty. <a href="/catalog">Browse the catalog</a> to add items.
+    </div>
+}
+else
+{
+    <EditForm Model="model" OnValidSubmit="PlaceOrder">
+        <DataAnnotationsValidator />
+
+        <div class="row g-5">
+            <!-- Shipping & Payment -->
+            <div class="col-md-7">
+                <h4 class="mb-3">Shipping Address</h4>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Street</label>
+                        <InputText @bind-Value="model.Street" class="form-control" />
+                        <ValidationMessage For="() => model.Street" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">City</label>
+                        <InputText @bind-Value="model.City" class="form-control" />
+                        <ValidationMessage For="() => model.City" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">State</label>
+                        <InputText @bind-Value="model.State" class="form-control" />
+                        <ValidationMessage For="() => model.State" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Zip Code</label>
+                        <InputText @bind-Value="model.ZipCode" class="form-control" />
+                        <ValidationMessage For="() => model.ZipCode" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Country</label>
+                        <InputText @bind-Value="model.Country" class="form-control" />
+                        <ValidationMessage For="() => model.Country" />
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <h4 class="mb-3">Payment</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Card Holder Name</label>
+                        <InputText @bind-Value="model.CardHolderName" class="form-control" />
+                        <ValidationMessage For="() => model.CardHolderName" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Card Number</label>
+                        <InputText @bind-Value="model.CardNumber" class="form-control" />
+                        <ValidationMessage For="() => model.CardNumber" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Expiry (MM/YY)</label>
+                        <InputText @bind-Value="model.CardExpiry" class="form-control" placeholder="MM/YY" />
+                        <ValidationMessage For="() => model.CardExpiry" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">CVV</label>
+                        <InputText @bind-Value="model.CardCVV" class="form-control" />
+                        <ValidationMessage For="() => model.CardCVV" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-md-5">
+                <h4 class="mb-3">Order Summary</h4>
+                <ul class="list-group mb-3">
+                    @foreach (var item in cartItems)
+                    {
+                        <li class="list-group-item d-flex justify-content-between lh-sm">
+                            <div>
+                                <h6 class="my-0">@item.ProductName</h6>
+                                <small class="text-muted">Qty: @item.Quantity</small>
+                            </div>
+                            <span class="text-muted">$@((item.UnitPrice * item.Quantity).ToString("0.00"))</span>
+                        </li>
+                    }
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><strong>Total</strong></span>
+                        <strong class="text-success">$@cartTotal.ToString("0.00")</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">@errorMessage</div>
+        }
+
+        <hr class="my-4" />
+        <div class="d-flex justify-content-between">
+            <a href="/cart" class="btn btn-outline-secondary">Back to Cart</a>
+            <button type="submit" class="btn btn-primary btn-lg" disabled="@isSubmitting">
+                @(isSubmitting ? "Processing..." : "Place Order")
+            </button>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private CheckoutModel model = new();
+    private System.Collections.Generic.List<BasketItem> cartItems;
+    private decimal cartTotal;
+    private string errorMessage;
+    private bool isSubmitting;
+    private string buyerId;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        buyerId = authState.User.Identity?.Name;
+
+        if (string.IsNullOrEmpty(buyerId))
+        {
+            Navigation.NavigateTo("/Account/Login?returnUrl=/checkout");
+            return;
+        }
+
+        // Load cart
+        var basket = await BasketService.GetBasketAsync(buyerId);
+        cartItems = basket?.Items?.ToList() ?? new System.Collections.Generic.List<BasketItem>();
+        cartTotal = cartItems.Sum(i => i.UnitPrice * i.Quantity);
+
+        if (cartItems.Count == 0) return;
+
+        // Pre-fill from user profile
+        var user = await UserManager.FindByNameAsync(buyerId);
+        if (user != null)
+        {
+            model.Street = user.Street ?? "";
+            model.City = user.City ?? "";
+            model.State = user.State ?? "";
+            model.ZipCode = user.ZipCode ?? "";
+            model.Country = user.Country ?? "";
+            model.CardHolderName = user.CardHolderName ?? "";
+        }
+    }
+
+    private async System.Threading.Tasks.Task PlaceOrder()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            System.DateTime cardExp = System.DateTime.UtcNow.AddYears(1);
+            if (!string.IsNullOrEmpty(model.CardExpiry))
+            {
+                if (System.DateTime.TryParseExact("01/" + model.CardExpiry, "dd/MM/yy",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var parsed))
+                {
+                    cardExp = parsed;
+                }
+            }
+
+            var address = new Address
+            {
+                Street = model.Street?.Trim(),
+                City = model.City?.Trim(),
+                State = model.State?.Trim(),
+                ZipCode = model.ZipCode?.Trim(),
+                Country = model.Country?.Trim()
+            };
+
+            var order = await OrderService.CreateOrderFromBasketAsync(
+                buyerId: buyerId,
+                buyerName: buyerId,
+                shippingAddress: address,
+                cardNumber: model.CardNumber?.Trim(),
+                cardHolderName: model.CardHolderName?.Trim(),
+                cardExpiration: cardExp,
+                cardSecurityNumber: model.CardCVV?.Trim(),
+                cardTypeId: 1);
+
+            Navigation.NavigateTo($"/order-confirmation/{order.Id}");
+        }
+        catch (System.Exception ex)
+        {
+            errorMessage = "An error occurred placing your order: " + ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    public class CheckoutModel
+    {
+        [Required] public string Street { get; set; } = "";
+        [Required] public string City { get; set; } = "";
+        [Required] public string State { get; set; } = "";
+        [Required] public string ZipCode { get; set; } = "";
+        [Required] public string Country { get; set; } = "";
+        [Required] public string CardHolderName { get; set; } = "";
+        [Required] public string CardNumber { get; set; } = "";
+        [Required] public string CardExpiry { get; set; } = "";
+        [Required] public string CardCVV { get; set; } = "";
+    }
+}

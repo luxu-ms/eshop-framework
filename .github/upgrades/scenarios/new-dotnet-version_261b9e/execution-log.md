@@ -43,3 +43,29 @@ Status: Complete
 ### Outcome
 Success - Phase 1 foundation migration complete. Infrastructure ready for UI migration in Phase 2.
 
+
+## [2026-03-20 13:27] TASK-003: Phase 2 - Core UI migration (product catalog)
+
+Status: Complete
+
+- **Verified**: 
+  - Build succeeded with 0 errors, 0 warnings
+  - No compilation errors in any Blazor pages
+  - Catalog page has brand/type filtering, search, pagination, add-to-cart
+  - ProductDetail page has route parameter, quantity input, add-to-cart
+  - Index.razor redirects to /catalog like original Default.aspx
+  - Static files moved to wwwroot for ASP.NET Core static file serving
+- **Commits**: f6c296b: "Phase 2 complete: Core UI migration - Catalog, ProductDetails, reusable components"
+- **Files Created**: Pages/Catalog.razor, Pages/ProductDetail.razor, wwwroot/Content/*, wwwroot/Scripts/*, wwwroot/images/*
+- **Files Modified**: Pages/Index.razor, eShopLegacy.csproj
+- **Code Changes**: 
+  - Migrated Default.aspx redirect → Index.razor with NavigationManager
+  - Migrated Catalog/Default.aspx → Pages/Catalog.razor with Blazor data binding, filtering, pagination, add-to-cart
+  - Migrated Catalog/ProductDetail.aspx → Pages/ProductDetail.razor with route parameters, quantity, add-to-cart
+  - Moved static files (CSS, JS, images) to wwwroot for ASP.NET Core
+  - Updated csproj to exclude old content folders
+- **Build Status**: Successful: 0 errors, 0 warnings
+
+### Outcome
+Success - Phase 2 core UI migration complete. All catalog pages migrated to Blazor.
+
