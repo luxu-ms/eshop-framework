@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using eShopLegacy.Models;
 
 namespace eShopLegacy.DAL
@@ -14,34 +15,34 @@ namespace eShopLegacy.DAL
             _context = context;
         }
 
-        public Basket GetOrCreateBasket(string buyerId)
+        public async Task<Basket> GetOrCreateBasketAsync(string buyerId)
         {
-            var basket = _context.Baskets
+            var basket = await _context.Baskets
                 .Include(b => b.Items)
-                .FirstOrDefault(b => b.BuyerId == buyerId);
+                .FirstOrDefaultAsync(b => b.BuyerId == buyerId);
 
             if (basket == null)
             {
                 basket = new Basket { BuyerId = buyerId };
                 _context.Baskets.Add(basket);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
 
             return basket;
         }
 
-        public Basket GetBasket(string buyerId)
+        public async Task<Basket> GetBasketAsync(string buyerId)
         {
-            return _context.Baskets
+            return await _context.Baskets
                 .Include(b => b.Items)
-                .FirstOrDefault(b => b.BuyerId == buyerId);
+                .FirstOrDefaultAsync(b => b.BuyerId == buyerId);
         }
 
-        public void AddItemToBasket(string buyerId, int catalogItemId, decimal price, int quantity = 1)
+        public async Task AddItemToBasketAsync(string buyerId, int catalogItemId, decimal price, int quantity = 1)
         {
-            var basket = GetOrCreateBasket(buyerId);
+            var basket = await GetOrCreateBasketAsync(buyerId);
 
-            var catalogItem = _context.CatalogItems.Find(catalogItemId);
+            var catalogItem = await _context.CatalogItems.FindAsync(catalogItemId);
             if (catalogItem == null) return;
 
             var existingItem = basket.Items.FirstOrDefault(i => i.CatalogItemId == catalogItemId);
@@ -63,12 +64,12 @@ namespace eShopLegacy.DAL
                 });
             }
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void UpdateBasketItem(int basketItemId, int quantity)
+        public async Task UpdateBasketItemAsync(int basketItemId, int quantity)
         {
-            var item = _context.BasketItems.Find(basketItemId);
+            var item = await _context.BasketItems.FindAsync(basketItemId);
             if (item == null) return;
 
             if (quantity <= 0)
@@ -76,37 +77,38 @@ namespace eShopLegacy.DAL
             else
                 item.Quantity = quantity;
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void RemoveItemFromBasket(int basketItemId)
+        public async Task RemoveItemFromBasketAsync(int basketItemId)
         {
-            var item = _context.BasketItems.Find(basketItemId);
+            var item = await _context.BasketItems.FindAsync(basketItemId);
             if (item != null)
             {
                 _context.BasketItems.Remove(item);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
         }
 
-        public void ClearBasket(string buyerId)
+        public async Task ClearBasketAsync(string buyerId)
         {
-            var basket = GetBasket(buyerId);
+            var basket = await GetBasketAsync(buyerId);
             if (basket == null) return;
 
             _context.BasketItems.RemoveRange(basket.Items);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public int GetBasketItemCount(string buyerId)
+
+        public async Task<int> GetBasketItemCountAsync(string buyerId)
         {
-            var basket = GetBasket(buyerId);
+            var basket = await GetBasketAsync(buyerId);
             return basket?.Items.Sum(i => i.Quantity) ?? 0;
         }
 
-        public decimal GetBasketTotal(string buyerId)
+        public async Task<decimal> GetBasketTotalAsync(string buyerId)
         {
-            var basket = GetBasket(buyerId);
+            var basket = await GetBasketAsync(buyerId);
             return basket?.Items.Sum(i => i.UnitPrice * i.Quantity) ?? 0;
         }
     }
