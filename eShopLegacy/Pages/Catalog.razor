@@ -1,0 +1,233 @@
+@page "/catalog"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@inject CatalogService CatalogService
+@inject BasketService BasketService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Catalog</PageTitle>
+
+<div class="row mb-4 align-items-end">
+    <div class="col">
+        <h1 class="display-6 fw-bold">Catalog</h1>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Brand</label>
+        <select class="form-select" @bind="selectedBrandId" @bind:after="ApplyFilters">
+            <option value="0">All Brands</option>
+            @if (brands != null)
+            {
+                @foreach (var brand in brands)
+                {
+                    <option value="@brand.Id">@brand.Brand</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label fw-semibold">Type</label>
+        <select class="form-select" @bind="selectedTypeId" @bind:after="ApplyFilters">
+            <option value="0">All Types</option>
+            @if (types != null)
+            {
+                @foreach (var type in types)
+                {
+                    <option value="@type.Id">@type.Type</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label fw-semibold">Search</label>
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="Search products..." @bind="searchText" @bind:event="oninput" @onkeydown="HandleSearchKeyDown" />
+            <button class="btn btn-outline-secondary" @onclick="ApplyFilters">Search</button>
+        </div>
+    </div>
+</div>
+
+<!-- Product Grid -->
+@if (products == null)
+{
+    <div class="text-center py-5">
+        <p class="text-muted fs-5">Loading products...</p>
+    </div>
+}
+else if (products.Count == 0)
+{
+    <div class="text-center py-5">
+        <p class="text-muted fs-5">No products found matching your criteria.</p>
+        <button class="btn btn-outline-primary" @onclick="ClearFilters">Clear Filters</button>
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        @foreach (var item in products)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm product-card">
+                    <a href="/catalog/@item.Id">
+                        <img src="@GetProductImage(item.PictureUri)"
+                             class="card-img-top product-img"
+                             alt="@item.Name" />
+                    </a>
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">@item.Name</h6>
+                        <p class="card-text text-muted small flex-grow-1">@(item.CatalogBrand?.Brand) &mdash; @(item.CatalogType?.Type)</p>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span class="fs-5 fw-bold text-success">$@item.Price.ToString("0.00")</span>
+                            <button class="btn btn-primary btn-sm" @onclick="() => AddToCart(item.Id, item.Price)">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pager -->
+    @if (totalItems > PageSize)
+    {
+        <div class="d-flex justify-content-center mt-4">
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item @(currentPage == 0 ? "disabled" : "")">
+                        <button class="page-link" @onclick="PreviousPage" disabled="@(currentPage == 0)">&laquo; Previous</button>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Page @(currentPage + 1) of @TotalPages</span>
+                    </li>
+                    <li class="page-item @(currentPage + 1 >= TotalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="NextPage" disabled="@(currentPage + 1 >= TotalPages)">Next &raquo;</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+}
+
+<!-- Cart notification -->
+@if (showCartNotification)
+{
+    <div class="alert alert-success position-fixed bottom-0 end-0 m-3 shadow" style="z-index:9999">
+        Item added to cart!
+    </div>
+}
+
+@code {
+    private const int PageSize = 8;
+
+    private System.Collections.Generic.List<CatalogBrand> brands;
+    private System.Collections.Generic.List<CatalogType> types;
+    private System.Collections.Generic.List<CatalogItem> products;
+
+    private int selectedBrandId;
+    private int selectedTypeId;
+    private string searchText = "";
+    private int currentPage;
+    private int totalItems;
+    private bool showCartNotification;
+
+    private int TotalPages => System.Math.Max(1, (int)System.Math.Ceiling((double)totalItems / PageSize));
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        await LoadFiltersAsync();
+        await LoadProductsAsync();
+    }
+
+    private async System.Threading.Tasks.Task LoadFiltersAsync()
+    {
+        brands = await CatalogService.GetCatalogBrandsAsync();
+        types = await CatalogService.GetCatalogTypesAsync();
+    }
+
+    private async System.Threading.Tasks.Task LoadProductsAsync()
+    {
+        int? brandId = selectedBrandId == 0 ? (int?)null : selectedBrandId;
+        int? typeId = selectedTypeId == 0 ? (int?)null : selectedTypeId;
+
+        var result = await CatalogService.GetCatalogItemsAsync(
+            currentPage, PageSize, brandId, typeId, searchText);
+
+        products = result.Items;
+        totalItems = result.TotalCount;
+    }
+
+    private async System.Threading.Tasks.Task ApplyFilters()
+    {
+        currentPage = 0;
+        await LoadProductsAsync();
+    }
+
+    private async System.Threading.Tasks.Task ClearFilters()
+    {
+        selectedBrandId = 0;
+        selectedTypeId = 0;
+        searchText = "";
+        currentPage = 0;
+        await LoadProductsAsync();
+    }
+
+    private async System.Threading.Tasks.Task PreviousPage()
+    {
+        if (currentPage > 0)
+        {
+            currentPage--;
+            await LoadProductsAsync();
+        }
+    }
+
+    private async System.Threading.Tasks.Task NextPage()
+    {
+        if (currentPage + 1 < TotalPages)
+        {
+            currentPage++;
+            await LoadProductsAsync();
+        }
+    }
+
+    private async System.Threading.Tasks.Task HandleSearchKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await ApplyFilters();
+        }
+    }
+
+    private async System.Threading.Tasks.Task AddToCart(int catalogItemId, decimal price)
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        string buyerId = authState.User.Identity?.IsAuthenticated == true
+            ? authState.User.Identity.Name
+            : "anonymous-" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
+
+        await BasketService.AddItemToBasketAsync(buyerId, catalogItemId, price);
+
+        showCartNotification = true;
+        StateHasChanged();
+
+        _ = HideNotificationAsync();
+    }
+
+    private async System.Threading.Tasks.Task HideNotificationAsync()
+    {
+        await System.Threading.Tasks.Task.Delay(2000);
+        showCartNotification = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string GetProductImage(string pictureUri)
+    {
+        if (!string.IsNullOrEmpty(pictureUri))
+            return pictureUri;
+        return "/Content/placeholder.png?v=2";
+    }
+}

@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Exclude old WebForms files from build for now - will be migrated in Phase 2/3 -->
+    <!-- Exclude old WebForms files from build -->
     <Compile Remove="**\*.aspx.cs" />
     <Compile Remove="**\*.aspx.designer.cs" />
     <Compile Remove="**\*.Master.cs" />
@@ -31,21 +31,19 @@
     <Compile Remove="Global.asax.cs" />
     <Compile Remove="Startup.cs" />
     <Compile Remove="Properties\AssemblyInfo.cs" />
-    
+
     <Content Remove="**\*.aspx" />
     <Content Remove="**\*.Master" />
     <Content Remove="Global.asax" />
     <Content Remove="Web.config" />
     <Content Remove="Web.*.config" />
     <Content Remove="packages.config" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <!-- Keep static content -->
-    <Content Include="Content\**" />
-    <Content Include="Scripts\**" />
-    <Content Include="images\**" />
-    <Content Include="favicon.ico" />
+    <!-- Exclude old content folders (now in wwwroot) -->
+    <Content Remove="Content\**" />
+    <Content Remove="Scripts\**" />
+    <Content Remove="images\**" />
+    <Content Remove="favicon.ico" />
   </ItemGroup>
 
 </Project>

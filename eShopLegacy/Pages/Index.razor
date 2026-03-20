@@ -1,13 +1,11 @@
 @page "/"
+@inject NavigationManager Navigation
 
-<PageTitle>eShop Legacy - Home</PageTitle>
+<PageTitle>eShop Legacy</PageTitle>
 
-<h1>Welcome to eShop Legacy</h1>
-
-<p>The application infrastructure has been migrated to .NET 10.0 and Blazor Server.</p>
-
-<p><a href="/catalog" class="btn btn-primary">Browse Catalog</a></p>
-
-<div class="alert alert-info mt-4">
-    <strong>Migration Status:</strong> Phase 1 (Foundation) complete. UI pages will be migrated in Phase 2 and Phase 3.
-</div>
+@code {
+    protected override void OnInitialized()
+    {
+        Navigation.NavigateTo("/catalog", replace: true);
+    }
+}

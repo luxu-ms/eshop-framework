@@ -1,0 +1,131 @@
+@page "/catalog/{ProductId:int}"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject CatalogService CatalogService
+@inject BasketService BasketService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>@(product?.Name ?? "Product Detail")</PageTitle>
+
+@if (notFound)
+{
+    <div class="alert alert-warning">
+        Product not found. <a href="/catalog">Back to Catalog</a>
+    </div>
+}
+else if (product == null)
+{
+    <p class="text-muted">Loading product...</p>
+}
+else
+{
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/catalog">Catalog</a></li>
+            <li class="breadcrumb-item active">@product.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row g-5">
+        <!-- Image -->
+        <div class="col-md-5 text-center">
+            <img src="@GetProductImage(product.PictureUri)"
+                 class="img-fluid rounded shadow product-detail-img"
+                 alt="@product.Name" />
+        </div>
+
+        <!-- Details -->
+        <div class="col-md-7">
+            <h2 class="fw-bold">@product.Name</h2>
+            <p class="text-muted mb-1">
+                <span class="badge bg-secondary me-1">@(product.CatalogBrand?.Brand ?? "")</span>
+                <span class="badge bg-info text-dark">@(product.CatalogType?.Type ?? "")</span>
+            </p>
+            <h3 class="text-success my-3">$@product.Price.ToString("0.00")</h3>
+            <p class="lead">@product.Description</p>
+
+            <div class="mb-3">
+                @if (product.AvailableStock > 0)
+                {
+                    <span class="badge bg-success">In Stock (@product.AvailableStock available)</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Out of Stock</span>
+                }
+            </div>
+
+            <div class="d-flex align-items-center gap-3 mt-4">
+                <div class="input-group" style="max-width:130px">
+                    <span class="input-group-text">Qty</span>
+                    <input type="number" class="form-control text-center" @bind="quantity" min="1" max="99" />
+                </div>
+                <button class="btn btn-primary btn-lg" @onclick="AddToCart" disabled="@isAddingToCart">
+                    @(isAddingToCart ? "Adding..." : "Add to Cart")
+                </button>
+            </div>
+
+            @if (showSuccess)
+            {
+                <div class="alert alert-success mt-3">
+                    Item added to your cart. <a href="/cart">View Cart</a>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int ProductId { get; set; }
+
+    private CatalogItem product;
+    private bool notFound;
+    private int quantity = 1;
+    private bool isAddingToCart;
+    private bool showSuccess;
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        product = await CatalogService.GetCatalogItemAsync(ProductId);
+
+        if (product == null)
+        {
+            notFound = true;
+        }
+    }
+
+    private async System.Threading.Tasks.Task AddToCart()
+    {
+        if (product == null) return;
+
+        isAddingToCart = true;
+        showSuccess = false;
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            string buyerId = authState.User.Identity?.IsAuthenticated == true
+                ? authState.User.Identity.Name
+                : "anonymous-" + System.Guid.NewGuid().ToString("N").Substring(0, 8);
+
+            int qty = quantity < 1 ? 1 : quantity;
+            await BasketService.AddItemToBasketAsync(buyerId, product.Id, product.Price, qty);
+
+            showSuccess = true;
+            quantity = 1;
+        }
+        finally
+        {
+            isAddingToCart = false;
+        }
+    }
+
+    private string GetProductImage(string pictureUri)
+    {
+        if (!string.IsNullOrEmpty(pictureUri))
+            return pictureUri;
+        return "/Content/placeholder.png?v=2";
+    }
+}
