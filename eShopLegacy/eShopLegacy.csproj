@@ -49,6 +49,16 @@
     <Reference Include="Azure.Identity">
       <HintPath>..\packages\Azure.Identity.1.17.1\lib\netstandard2.0\Azure.Identity.dll</HintPath>
     </Reference>
+    <!-- Azure Key Vault Configuration Builders -->
+    <Reference Include="Microsoft.Configuration.ConfigurationBuilders.Azure">
+      <HintPath>..\packages\Microsoft.Configuration.ConfigurationBuilders.Azure.3.0.0\lib\Net471\Microsoft.Configuration.ConfigurationBuilders.Azure.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Configuration.ConfigurationBuilders.Base">
+      <HintPath>..\packages\Microsoft.Configuration.ConfigurationBuilders.Base.3.0.0\lib\Net471\Microsoft.Configuration.ConfigurationBuilders.Base.dll</HintPath>
+    </Reference>
+    <Reference Include="Azure.Security.KeyVault.Secrets">
+      <HintPath>..\packages\Azure.Security.KeyVault.Secrets.4.0.0\lib\netstandard2.0\Azure.Security.KeyVault.Secrets.dll</HintPath>
+    </Reference>
     <!-- Azure Cache for Redis session state dependencies -->
     <Reference Include="Microsoft.Web.RedisSessionStateProvider">
       <HintPath>..\packages\Microsoft.Web.RedisSessionStateProvider.5.0.4\lib\net472\Microsoft.Web.RedisSessionStateProvider.dll</HintPath>
