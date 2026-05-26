@@ -1,33 +1,14 @@
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.EntityFramework;
-using eShopLegacy.DAL;
-using eShopLegacy.Models;
+// IdentityConfig.cs
+// The local ASP.NET Identity UserManager has been replaced by Microsoft Entra ID authentication.
+// User authentication is now handled via OWIN OpenIdConnect middleware configured in Startup.Auth.cs.
+// User identities are managed in Microsoft Entra ID (Azure Active Directory).
+// See App_Start/Startup.Auth.cs for the OIDC authentication configuration.
 
 namespace eShopLegacy.App_Start
 {
-    public class IdentityConfig
+    // Retained as empty placeholder to avoid breaking any references.
+    // All identity functionality is now provided by Microsoft Entra ID.
+    public static class IdentityConfig
     {
-        public static UserManager<ApplicationUser> CreateUserManager()
-        {
-            var manager = new UserManager<ApplicationUser>(
-                new UserStore<ApplicationUser>(new eShopContext()));
-
-            manager.UserValidator = new UserValidator<ApplicationUser>(manager)
-            {
-                AllowOnlyAlphanumericUserNames = false,
-                RequireUniqueEmail = true
-            };
-
-            manager.PasswordValidator = new PasswordValidator
-            {
-                RequiredLength = 6,
-                RequireNonLetterOrDigit = false,
-                RequireDigit = false,
-                RequireLowercase = false,
-                RequireUppercase = false
-            };
-
-            return manager;
-        }
     }
 }

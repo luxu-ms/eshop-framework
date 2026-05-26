@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generated from assessment report-20260526131541 covering all categories: Identity, Database, Scale, Security.",
+  "tasks": [
+    {
+      "type": "transform",
+      "id": "001-transform-identity-windows-auth-to-entra-id",
+      "description": "Migrate Windows Authentication to Microsoft Entra ID for Azure App Service compatibility",
+      "requirements": "Replace Windows-integrated authentication used in SQL connection strings (Integrated Security=True) and the Forms-based ASP.NET Identity/OWIN login flow. Migrate to Microsoft Entra ID with Azure App Service built-in authentication. Update Web.config authentication section, connection strings, and login flow to support Managed Identity. Files affected: Web.config, Web.Release.config, Account/Login.aspx.cs, App_Start/IdentityConfig.cs, Startup.cs.",
+      "environmentConfiguration": null,
+      "status": null,
+      "skills": [
+        {
+          "name": "migration-windows-auth-to-entra-id",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "generateNewIntegrationTests": "false",
+        "passUnitTests": "true",
+        "passIntegrationTests": "false",
+        "securityComplianceCheck": "false"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "002-transform-database-sql-to-azure-sql",
+      "description": "Migrate SQL Server connections to Azure SQL Database and upgrade System.Data.SqlClient to Microsoft.Data.SqlClient",
+      "requirements": "Migrate database connectivity from LocalDB/on-premises SQL Server to Azure SQL Database. Replace System.Data.SqlClient NuGet package with Microsoft.Data.SqlClient to enable Managed Identity authentication. Update all connection strings in Web.config and Web.Release.config to use Azure SQL Database endpoints. Update Entity Framework 6 provider configuration for Microsoft.Data.SqlClient. Ensure the eShopContext DbContext and DAL layer work with the new provider. Files affected: Web.config, Web.Release.config, packages.config, DAL/*.cs, eShopLegacy.csproj.",
+      "environmentConfiguration": null,
+      "status": null,
+      "skills": [
+        {
+          "name": "migration-sqlclient-to-microsoft-data-sqlclient",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "generateNewIntegrationTests": "false",
+        "passUnitTests": "true",
+        "passIntegrationTests": "false",
+        "securityComplianceCheck": "false"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-scale-session-state-to-redis",
+      "description": "Migrate in-process session state to Azure Cache for Redis for scale-out support",
+      "requirements": "Replace InProc session state (sessionState mode='InProc' in Web.config) with Azure Cache for Redis using the ASP.NET Session State Provider for Redis. Install the Microsoft.Web.RedisSessionStateProvider NuGet package. Update Web.config sessionState configuration to use Redis as the session store. Ensure session data serialization is compatible (Session['AnonymousBuyerId'] in Account/Login.aspx.cs, and any other session usage). Files affected: Web.config, packages.config, eShopLegacy.csproj.",
+      "environmentConfiguration": null,
+      "status": null,
+      "skills": [
+        {
+          "name": "migration-session-state-to-redis",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "generateNewIntegrationTests": "false",
+        "passUnitTests": "true",
+        "passIntegrationTests": "false",
+        "securityComplianceCheck": "false"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "004-transform-scale-static-content-to-blob-cdn",
+      "description": "Move static content to Azure Blob Storage with Azure CDN for improved performance and cost efficiency",
+      "requirements": "Identify all static content files (Content/bootstrap.min.css, Content/site.css, Scripts/jquery-3.6.0.min.js, Scripts/bootstrap.bundle.min.js, images/products/*.png, Content/placeholder.png) and plan their migration to Azure Blob Storage. Update all references in ASPX pages, Site.Master, and CSS files to use CDN URLs. Configure Azure CDN to front the Blob Storage container. Files affected: Site.Master, Site.Master.cs, *.aspx pages, Content/site.css.",
+      "environmentConfiguration": null,
+      "status": null,
+      "skills": [
+        {
+          "name": "migration-static-content-to-blob-storage",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "generateNewIntegrationTests": "false",
+        "passUnitTests": "true",
+        "passIntegrationTests": "false",
+        "securityComplianceCheck": "false"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "005-transform-security-config-builders-keyvault",
+      "description": "Secure connection strings and app settings using configuration builders with Azure Key Vault",
+      "requirements": "Replace plaintext connection strings and app settings in Web.config with configuration builders that retrieve secrets from Azure Key Vault. Install Microsoft.Configuration.ConfigurationBuilders.Azure NuGet package. Configure configBuilders section in Web.config for both connectionStrings and appSettings. Move sensitive values (database connection string, any API keys) to Key Vault references. Address hardcoded password handling in Account/Login.aspx.cs (line 36) by ensuring credentials are never logged or stored in plain text. Files affected: Web.config, Web.Release.config, packages.config, eShopLegacy.csproj.",
+      "environmentConfiguration": null,
+      "status": null,
+      "skills": [
+        {
+          "name": "migration-config-to-azure-keyvault",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "generateNewIntegrationTests": "false",
+        "passUnitTests": "true",
+        "passIntegrationTests": "false",
+        "securityComplianceCheck": "true"
+      }
+    }
+  ],
+  "metadata": {
+    "planName": "eShopLegacy Azure Migration",
+    "projectName": "eShopLegacy",
+    "language": "dotnet",
+    "createdAt": "2026-05-26T13:18:00Z",
+    "version": "1.0"
+  }
+}

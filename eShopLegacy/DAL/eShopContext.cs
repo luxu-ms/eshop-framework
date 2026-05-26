@@ -1,9 +1,26 @@
 using System.Data.Entity;
+using System.Data.Entity.SqlServer;
 using Microsoft.AspNet.Identity.EntityFramework;
 using eShopLegacy.Models;
 
 namespace eShopLegacy.DAL
 {
+    /// <summary>
+    /// EF6 DbConfiguration that uses Microsoft.Data.SqlClient provider with Managed Identity support.
+    /// Handles the Azure App Service scenario where ProviderName may be reported as "System.Data.SqlClient".
+    /// </summary>
+    public class AppServiceSqlDbConfiguration : MicrosoftSqlDbConfiguration
+    {
+        public AppServiceSqlDbConfiguration()
+        {
+            // Allow EF6 to work when App Service sets ProviderName to "System.Data.SqlClient"
+            SetProviderFactory("System.Data.SqlClient", Microsoft.Data.SqlClient.SqlClientFactory.Instance);
+            SetProviderServices("System.Data.SqlClient", MicrosoftSqlProviderServices.Instance);
+            SetExecutionStrategy("System.Data.SqlClient", () => new MicrosoftSqlAzureExecutionStrategy());
+        }
+    }
+
+    [DbConfigurationType(typeof(AppServiceSqlDbConfiguration))]
     public class eShopContext : IdentityDbContext<ApplicationUser>
     {
         public eShopContext()
