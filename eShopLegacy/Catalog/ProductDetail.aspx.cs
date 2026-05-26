@@ -1,5 +1,6 @@
 using System;
 using System.Web.UI;
+using eShopLegacy.Components;
 using eShopLegacy.DAL;
 using eShopLegacy.Models;
 
@@ -39,7 +40,7 @@ namespace eShopLegacy.Catalog
                 if (item.AvailableStock == 0)
                     lblStock.CssClass = "badge bg-danger";
 
-                imgProduct.Src = ResolveUrl("~/Content/placeholder.png");
+                imgProduct.Src = CdnHelper.Url("Content/placeholder.png");
                 ViewState["ProductId"] = item.Id;
                 ViewState["Price"]     = item.Price;
             }

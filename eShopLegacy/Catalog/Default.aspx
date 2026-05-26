@@ -44,7 +44,7 @@
                                     <img src='<%# GetProductImage(Eval("PictureUri")) %>'
                                          class="card-img-top product-img"
                                          alt='<%# Eval("Name") %>'
-                                         onerror="this.onerror=null;this.src='/Content/placeholder.png?v=2';" />
+                                        onerror="this.onerror=null;this.src='<%# PlaceholderImageUrl %>';" />
                                 </a>
                                 <div class="card-body d-flex flex-column">
                                     <h6 class="card-title"><%# Eval("Name") %></h6>

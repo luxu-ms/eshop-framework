@@ -32,7 +32,7 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-3">
-                                        <img src="<%# ResolveUrl("~/Content/placeholder.png") %>"
+                                        <img src="<%# eShopLegacy.Components.CdnHelper.Url("Content/placeholder.png") %>"
                                              width="56" height="56" class="rounded" alt='<%# Eval("ProductName") %>' />
                                         <span class="fw-semibold"><%# Eval("ProductName") %></span>
                                     </div>

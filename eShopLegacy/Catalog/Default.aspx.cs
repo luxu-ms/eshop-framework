@@ -1,6 +1,7 @@
 using System;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using eShopLegacy.Components;
 using eShopLegacy.DAL;
 using eShopLegacy.Models;
 
@@ -98,8 +99,13 @@ namespace eShopLegacy.Catalog
             var uri = pictureUri?.ToString();
             if (!string.IsNullOrEmpty(uri))
                 return uri;
-            return ResolveUrl("~/Content/placeholder.png") + "?v=2";
+            return CdnHelper.Url("Content/placeholder.png") + "?v=2";
         }
+
+        /// <summary>
+        /// CDN URL for the product placeholder image; used in ItemTemplate onerror handlers.
+        /// </summary>
+        protected string PlaceholderImageUrl => CdnHelper.Url("Content/placeholder.png") + "?v=2";
 
         protected void btnSearch_Click(object sender, EventArgs e)
         {
