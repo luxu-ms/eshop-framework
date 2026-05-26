@@ -1,10 +1,11 @@
-using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace eShopLegacy.Models
 {
+    /// <summary>
+    /// Application user entity for EF6 Identity schema.
+    /// Authentication is handled by Microsoft Entra ID (OIDC) – not local credentials.
+    /// </summary>
     public class ApplicationUser : IdentityUser
     {
         public string Name { get; set; }
@@ -28,11 +29,5 @@ namespace eShopLegacy.Models
         public string CardHolderName { get; set; }
 
         public string CardExpiration { get; set; }
-
-        public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager)
-        {
-            var userIdentity = await manager.CreateIdentityAsync(this, DefaultAuthenticationTypes.ApplicationCookie);
-            return userIdentity;
-        }
     }
 }

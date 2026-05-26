@@ -1,7 +1,6 @@
 using System;
 using System.Web;
 using System.Web.Routing;
-using System.Web.Security;
 using eShopLegacy.DAL;
 
 namespace eShopLegacy
