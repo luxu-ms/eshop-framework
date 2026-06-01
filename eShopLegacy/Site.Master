@@ -5,8 +5,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%: Page.Title %> - eShop on Web Forms</title>
-    <link href="/Content/bootstrap.min.css" rel="stylesheet" />
-    <link href="/Content/site.css" rel="stylesheet" />
+    <link href="<%= eShopLegacy.CdnHelper.GetUrl("/Content/bootstrap.min.css") %>" rel="stylesheet" />
+    <link href="<%= eShopLegacy.CdnHelper.GetUrl("/Content/site.css") %>" rel="stylesheet" />
     <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
 </head>
 <body>
@@ -76,8 +76,8 @@
             </div>
         </footer>
 
-        <script src="/Scripts/jquery-3.6.0.min.js"></script>
-        <script src="/Scripts/bootstrap.bundle.min.js"></script>
+        <script src="<%= eShopLegacy.CdnHelper.GetUrl("/Scripts/jquery-3.6.0.min.js") %>"></script>
+        <script src="<%= eShopLegacy.CdnHelper.GetUrl("/Scripts/bootstrap.bundle.min.js") %>"></script>
         <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
     </form>
 </body>

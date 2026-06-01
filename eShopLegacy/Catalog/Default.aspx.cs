@@ -98,7 +98,8 @@ namespace eShopLegacy.Catalog
             var uri = pictureUri?.ToString();
             if (!string.IsNullOrEmpty(uri))
                 return uri;
-            return ResolveUrl("~/Content/placeholder.png") + "?v=2";
+            // Fall back to CDN-hosted placeholder image
+            return CdnHelper.GetUrl("/Content/placeholder.png") + "?v=2";
         }
 
         protected void btnSearch_Click(object sender, EventArgs e)
