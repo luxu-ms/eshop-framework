@@ -1,10 +1,13 @@
-using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace eShopLegacy.Models
 {
+    /// <summary>
+    /// Application user profile stored in the database.
+    /// Authentication is handled by Microsoft Entra ID (Azure AD) via OIDC.
+    /// This entity retains the IdentityUser base class to keep database schema compatibility
+    /// with the existing AspNetUsers table, and stores extended user profile data.
+    /// </summary>
     public class ApplicationUser : IdentityUser
     {
         public string Name { get; set; }
@@ -28,11 +31,5 @@ namespace eShopLegacy.Models
         public string CardHolderName { get; set; }
 
         public string CardExpiration { get; set; }
-
-        public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager)
-        {
-            var userIdentity = await manager.CreateIdentityAsync(this, DefaultAuthenticationTypes.ApplicationCookie);
-            return userIdentity;
-        }
     }
 }
