@@ -2,46 +2,21 @@
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
 
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow">
-                <div class="card-header text-center">
-                    <h4 class="my-2 fw-bold">Sign In</h4>
+    <%-- Authentication is now handled by Microsoft Entra ID (Azure AD) via OpenID Connect.
+         Page_Load immediately triggers the OIDC challenge for unauthenticated users.
+         This markup is shown only briefly before the redirect fires. --%>
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-5 text-center">
+            <div class="card shadow p-4">
+                <h4 class="fw-bold mb-3">Sign In</h4>
+                <p class="text-muted">
+                    Authentication is managed through <strong>Microsoft Entra ID</strong> (Azure AD).
+                    You will be redirected to the Microsoft sign-in page.
+                </p>
+                <div class="spinner-border text-primary mt-3" role="status">
+                    <span class="visually-hidden">Redirecting...</span>
                 </div>
-                <div class="card-body p-4">
-
-                    <asp:Panel ID="pnlError" runat="server" Visible="false" CssClass="alert alert-danger">
-                        <asp:Literal ID="litError" runat="server" />
-                    </asp:Panel>
-
-                    <div class="mb-3">
-                        <label class="form-label">Email address</label>
-                        <asp:TextBox ID="txtEmail" runat="server" CssClass="form-control" TextMode="Email" placeholder="you@example.com" />
-                        <asp:RequiredFieldValidator ControlToValidate="txtEmail" runat="server"
-                            ErrorMessage="Email is required." CssClass="text-danger small" Display="Dynamic" />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <asp:TextBox ID="txtPassword" runat="server" CssClass="form-control" TextMode="Password" placeholder="Password" />
-                        <asp:RequiredFieldValidator ControlToValidate="txtPassword" runat="server"
-                            ErrorMessage="Password is required." CssClass="text-danger small" Display="Dynamic" />
-                    </div>
-
-                    <div class="mb-3 form-check">
-                        <asp:CheckBox ID="chkRemember" runat="server" CssClass="form-check-input" />
-                        <label class="form-check-label" for="<%: chkRemember.ClientID %>">Remember me</label>
-                    </div>
-
-                    <asp:Button ID="btnLogin" runat="server" Text="Sign In"
-                        CssClass="btn btn-primary w-100" OnClick="btnLogin_Click" />
-
-                    <hr />
-                    <p class="text-center mb-0">
-                        Don't have an account?
-                        <a href="~/Account/Register.aspx" runat="server">Register</a>
-                    </p>
-                </div>
+                <p class="small text-muted mt-3">Redirecting to Microsoft sign-in&hellip;</p>
             </div>
         </div>
     </div>
