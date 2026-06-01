@@ -1,49 +1,28 @@
 using System;
 using System.Web;
 using System.Web.UI;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using eShopLegacy.App_Start;
-using eShopLegacy.Models;
+using Microsoft.Owin.Security;
+using Microsoft.Owin.Security.OpenIdConnect;
 
 namespace eShopLegacy.Account
 {
+    // With Microsoft Entra ID, user registration is managed by Azure AD.
+    // This page redirects unauthenticated users to the Entra ID login page,
+    // and authenticated users to their account/profile page.
     public partial class RegisterPage : Page
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (User.Identity.IsAuthenticated)
-                Response.Redirect("~/");
-        }
-
-        protected void btnRegister_Click(object sender, EventArgs e)
-        {
-            if (!Page.IsValid) return;
-
-            var manager = IdentityConfig.CreateUserManager();
-            var user = new ApplicationUser
+            if (!Request.IsAuthenticated)
             {
-                UserName = txtEmail.Text.Trim(),
-                Email    = txtEmail.Text.Trim(),
-                Name     = txtFirstName.Text.Trim(),
-                LastName = txtLastName.Text.Trim()
-            };
-
-            var result = manager.Create(user, txtPassword.Text);
-            if (result.Succeeded)
-            {
-                var authManager = Context.GetOwinContext().Authentication;
-                var identity    = manager.CreateIdentity(user, DefaultAuthenticationTypes.ApplicationCookie);
-                authManager.SignIn(new Microsoft.Owin.Security.AuthenticationProperties
-                {
-                    IsPersistent = false
-                }, identity);
-                Response.Redirect("~/");
+                // Trigger Azure AD / Entra ID sign-up / sign-in flow
+                HttpContext.Current.GetOwinContext().Authentication.Challenge(
+                    new AuthenticationProperties { RedirectUri = "/" },
+                    OpenIdConnectAuthenticationDefaults.AuthenticationType);
             }
             else
             {
-                pnlError.Visible = true;
-                litError.Text    = string.Join("<br/>", result.Errors);
+                Response.Redirect("~/");
             }
         }
     }

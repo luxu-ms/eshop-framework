@@ -1,8 +1,9 @@
 using System;
 using System.Web;
 using System.Web.UI;
-using Microsoft.AspNet.Identity;
 using Microsoft.Owin.Security;
+using Microsoft.Owin.Security.Cookies;
+using Microsoft.Owin.Security.OpenIdConnect;
 using eShopLegacy.DAL;
 
 namespace eShopLegacy
@@ -36,10 +37,11 @@ namespace eShopLegacy
 
         protected void btnSignOut_Click(object sender, EventArgs e)
         {
-            HttpContext.Current.GetOwinContext().Authentication.SignOut(
-                DefaultAuthenticationTypes.ApplicationCookie);
             Session.Clear();
-            Response.Redirect("~/");
+            // Sign out from both the OIDC provider (Entra ID) and the local cookie
+            HttpContext.Current.GetOwinContext().Authentication.SignOut(
+                OpenIdConnectAuthenticationDefaults.AuthenticationType,
+                CookieAuthenticationDefaults.AuthenticationType);
         }
 
         private string GetBuyerId()
