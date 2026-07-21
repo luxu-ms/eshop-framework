@@ -38,10 +38,9 @@ namespace eShopLegacy
         protected void btnSignOut_Click(object sender, EventArgs e)
         {
             Session.Clear();
-            // Sign out from both the OIDC provider (Entra ID) and the local cookie
             HttpContext.Current.GetOwinContext().Authentication.SignOut(
-                OpenIdConnectAuthenticationDefaults.AuthenticationType,
                 CookieAuthenticationDefaults.AuthenticationType);
+            Response.Redirect("~/");
         }
 
         private string GetBuyerId()

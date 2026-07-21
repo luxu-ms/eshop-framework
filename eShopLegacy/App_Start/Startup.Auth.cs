@@ -18,8 +18,6 @@ namespace eShopLegacy
 
         public void ConfigureAuth(IAppBuilder app)
         {
-            string authority = string.Format(aadInstance ?? "https://login.microsoftonline.com/{0}", tenantId);
-
             app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
 
             app.UseCookieAuthentication(new CookieAuthenticationOptions
@@ -28,29 +26,35 @@ namespace eShopLegacy
                 LoginPath          = new PathString("/Account/Login.aspx")
             });
 
-            app.UseOpenIdConnectAuthentication(new OpenIdConnectAuthenticationOptions
+            // Only enable OpenIdConnect when real Azure AD credentials are configured
+            if (!string.IsNullOrEmpty(clientId) && clientId != "your-entra-client-id")
             {
-                ClientId    = clientId,
-                Authority   = authority,
-                RedirectUri = postLogoutRedirectUri,
-                PostLogoutRedirectUri = postLogoutRedirectUri,
-                Scope       = "openid profile email",
-                ResponseType = "id_token",
-                TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                string authority = string.Format(aadInstance ?? "https://login.microsoftonline.com/{0}", tenantId);
+
+                app.UseOpenIdConnectAuthentication(new OpenIdConnectAuthenticationOptions
                 {
-                    ValidateIssuer = false,
-                    NameClaimType  = "name"
-                },
-                Notifications = new OpenIdConnectAuthenticationNotifications
-                {
-                    AuthenticationFailed = context =>
+                    ClientId    = clientId,
+                    Authority   = authority,
+                    RedirectUri = postLogoutRedirectUri,
+                    PostLogoutRedirectUri = postLogoutRedirectUri,
+                    Scope       = "openid profile email",
+                    ResponseType = "id_token",
+                    TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
                     {
-                        context.HandleResponse();
-                        context.Response.Redirect("/Error?message=authentication_failed");
-                        return Task.FromResult(0);
+                        ValidateIssuer = false,
+                        NameClaimType  = "name"
+                    },
+                    Notifications = new OpenIdConnectAuthenticationNotifications
+                    {
+                        AuthenticationFailed = context =>
+                        {
+                            context.HandleResponse();
+                            context.Response.Redirect("/Error?message=authentication_failed");
+                            return Task.FromResult(0);
+                        }
                     }
-                }
-            });
+                });
+            }
         }
     }
 }

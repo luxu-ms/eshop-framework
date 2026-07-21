@@ -2,21 +2,26 @@
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
 
-    <%-- Authentication is now handled by Microsoft Entra ID (Azure AD) via OpenID Connect.
-         Page_Load immediately triggers the OIDC challenge for unauthenticated users.
-         This markup is shown only briefly before the redirect fires. --%>
     <div class="row justify-content-center mt-5">
-        <div class="col-md-5 text-center">
+        <div class="col-md-4">
             <div class="card shadow p-4">
-                <h4 class="fw-bold mb-3">Sign In</h4>
-                <p class="text-muted">
-                    Authentication is managed through <strong>Microsoft Entra ID</strong> (Azure AD).
-                    You will be redirected to the Microsoft sign-in page.
-                </p>
-                <div class="spinner-border text-primary mt-3" role="status">
-                    <span class="visually-hidden">Redirecting...</span>
+                <h4 class="fw-bold mb-3 text-center">Sign In</h4>
+
+                <asp:Panel ID="ErrorPanel" runat="server" Visible="false" CssClass="alert alert-danger">
+                    <asp:Literal ID="ErrorMessage" runat="server" />
+                </asp:Panel>
+
+                <div class="mb-3">
+                    <label for="Email" class="form-label">Email</label>
+                    <asp:TextBox ID="Email" runat="server" CssClass="form-control" placeholder="admin@eshop.com" />
                 </div>
-                <p class="small text-muted mt-3">Redirecting to Microsoft sign-in&hellip;</p>
+                <div class="mb-3">
+                    <label for="Password" class="form-label">Password</label>
+                    <asp:TextBox ID="Password" runat="server" TextMode="Password" CssClass="form-control" />
+                </div>
+                <asp:Button ID="LoginButton" runat="server" Text="Sign In" CssClass="btn btn-primary w-100" OnClick="LoginButton_Click" />
+
+                <p class="small text-muted mt-3 text-center">Default: admin@eshop.com / Admin@123!</p>
             </div>
         </div>
     </div>

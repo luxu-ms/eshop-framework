@@ -36,28 +36,25 @@
                                 <asp:Label ID="lblCartCount" runat="server" CssClass="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" Text="0" Visible="false"></asp:Label>
                             </a>
                         </li>
-                        <asp:LoginView ID="loginView" runat="server">
-                            <AnonymousTemplate>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="~/Account/Login.aspx" runat="server">Sign In</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="~/Account/Register.aspx" runat="server">Register</a>
-                                </li>
-                            </AnonymousTemplate>
-                            <LoggedInTemplate>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
-                                        Welcome, <asp:LoginName ID="loginName" runat="server" />
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="~/Checkout/OrderHistory.aspx" runat="server">My Orders</a></li>
-                                        <li><hr class="dropdown-divider" /></li>
-                                        <li><asp:LinkButton ID="btnSignOut" runat="server" CssClass="dropdown-item" OnClick="btnSignOut_Click">Sign Out</asp:LinkButton></li>
-                                    </ul>
-                                </li>
-                            </LoggedInTemplate>
-                        </asp:LoginView>
+                        <% if (!Request.IsAuthenticated) { %>
+                            <li class="nav-item">
+                                <a class="nav-link" href="~/Account/Login.aspx" runat="server">Sign In</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="~/Account/Register.aspx" runat="server">Register</a>
+                            </li>
+                        <% } else { %>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
+                                    Welcome, <%= Context.User.Identity.Name %>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="~/Checkout/OrderHistory.aspx" runat="server">My Orders</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li><asp:LinkButton ID="btnSignOut" runat="server" CssClass="dropdown-item" OnClick="btnSignOut_Click">Sign Out</asp:LinkButton></li>
+                                </ul>
+                            </li>
+                        <% } %>
                     </ul>
                 </div>
             </div>

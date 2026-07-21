@@ -8,11 +8,10 @@ namespace eShopLegacy.Account
 {
     public partial class LoginPage
     {
-        protected global::System.Web.UI.WebControls.TextBox txtEmail;
-        protected global::System.Web.UI.WebControls.TextBox txtPassword;
-        protected global::System.Web.UI.WebControls.CheckBox chkRemember;
-        protected global::System.Web.UI.WebControls.Panel pnlError;
-        protected global::System.Web.UI.WebControls.Literal litError;
-        protected global::System.Web.UI.WebControls.Button btnLogin;
+        protected global::System.Web.UI.WebControls.TextBox Email;
+        protected global::System.Web.UI.WebControls.TextBox Password;
+        protected global::System.Web.UI.WebControls.Panel ErrorPanel;
+        protected global::System.Web.UI.WebControls.Literal ErrorMessage;
+        protected global::System.Web.UI.WebControls.Button LoginButton;
     }
 }

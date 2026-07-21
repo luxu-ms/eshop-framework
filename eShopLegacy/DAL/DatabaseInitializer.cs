@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
+using Microsoft.AspNet.Identity;
+using Microsoft.AspNet.Identity.EntityFramework;
 using eShopLegacy.Models;
 
 namespace eShopLegacy.DAL
@@ -49,6 +51,21 @@ namespace eShopLegacy.DAL
             };
             context.CatalogItems.AddRange(items);
             context.SaveChanges();
+
+            // Seed admin user for local dev
+            var userStore = new UserStore<ApplicationUser>(context);
+            var userManager = new UserManager<ApplicationUser>(userStore);
+            if (userManager.FindByEmail("admin@eshop.com") == null)
+            {
+                var admin = new ApplicationUser
+                {
+                    UserName = "admin@eshop.com",
+                    Email = "admin@eshop.com",
+                    Name = "Admin",
+                    LastName = "User"
+                };
+                userManager.Create(admin, "Admin@123!");
+            }
 
             base.Seed(context);
         }

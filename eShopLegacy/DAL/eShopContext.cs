@@ -6,10 +6,8 @@ using eShopLegacy.Models;
 namespace eShopLegacy.DAL
 {
     /// <summary>
-    /// EF6 database context configured to use Microsoft.Data.SqlClient via MicrosoftSqlDbConfiguration.
-    /// This enables Azure AD Managed Identity authentication for Azure SQL Database.
+    /// EF6 database context using System.Data.SqlClient (built-in .NET Framework provider).
     /// </summary>
-    [DbConfigurationType(typeof(MicrosoftSqlDbConfiguration))]
     public class eShopContext : IdentityDbContext<ApplicationUser>
     {
         public eShopContext()
