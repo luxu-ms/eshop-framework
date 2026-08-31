@@ -1,0 +1,14 @@
+@page "/Cart/ShoppingCart.aspx"
+@model eShop.Web.Pages.Cart.ShoppingCartModel
+@{ ViewData["Title"] = "Shopping Cart"; }
+<h1 class="display-6 fw-bold mb-4">Shopping Cart</h1>
+@if (Model.Items.Count == 0)
+{
+    <div class="text-center py-5"><p class="text-muted fs-5">Your cart is empty.</p><a href="/Catalog/Default.aspx" class="btn btn-primary">Continue Shopping</a></div>
+}
+else
+{
+<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Product</th><th>Price</th><th>Quantity</th><th>Total</th><th></th></tr></thead><tbody>
+@foreach (var item in Model.Items) { <tr><td>@item.ProductName</td><td>$@item.UnitPrice.ToString("0.00")</td><td><form method="post" class="d-flex gap-1"><button asp-page-handler="Change" name="delta" value="-1" class="btn btn-sm btn-outline-secondary">-</button><span class="p-1">@item.Quantity</span><button asp-page-handler="Change" name="delta" value="1" class="btn btn-sm btn-outline-secondary">+</button><input type="hidden" name="itemId" value="@item.Id" /></form></td><td>$@((item.UnitPrice * item.Quantity).ToString("0.00"))</td><td><form method="post"><input type="hidden" name="itemId" value="@item.Id" /><button asp-page-handler="Remove" class="btn btn-sm btn-outline-danger">Remove</button></form></td></tr> }
+</tbody></table></div><div class="text-end"><h4>Total: <span class="text-success">$@Model.Total.ToString("0.00")</span></h4><a href="/Account/Login.aspx?ReturnUrl=%2FCheckout%2FCheckout.aspx" class="btn btn-success">Proceed to Checkout</a></div>
+}

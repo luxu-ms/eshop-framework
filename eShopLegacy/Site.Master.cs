@@ -3,6 +3,7 @@ using System.Web;
 using System.Web.UI;
 using Microsoft.AspNet.Identity;
 using Microsoft.Owin.Security;
+using eShopLegacy.App_Start;
 using eShopLegacy.DAL;
 
 namespace eShopLegacy
@@ -44,16 +45,7 @@ namespace eShopLegacy
 
         private string GetBuyerId()
         {
-            if (HttpContext.Current.User.Identity.IsAuthenticated)
-                return HttpContext.Current.User.Identity.Name;
-
-            // Anonymous basket uses session
-            if (Session["AnonymousBuyerId"] != null)
-                return Session["AnonymousBuyerId"].ToString();
-
-            var id = Guid.NewGuid().ToString();
-            Session["AnonymousBuyerId"] = id;
-            return id;
+            return BuyerIdAccessor.Get(Page);
         }
     }
 }

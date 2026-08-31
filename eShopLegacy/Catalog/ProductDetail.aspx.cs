@@ -1,5 +1,6 @@
 using System;
 using System.Web.UI;
+using eShopLegacy.App_Start;
 using eShopLegacy.DAL;
 using eShopLegacy.Models;
 
@@ -74,10 +75,7 @@ namespace eShopLegacy.Catalog
 
         private string GetBuyerId()
         {
-            if (User.Identity.IsAuthenticated) return User.Identity.Name;
-            if (Session["AnonymousBuyerId"] == null)
-                Session["AnonymousBuyerId"] = Guid.NewGuid().ToString();
-            return Session["AnonymousBuyerId"].ToString();
+            return BuyerIdAccessor.Get(this);
         }
     }
 }

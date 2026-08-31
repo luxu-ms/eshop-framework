@@ -1,0 +1,4 @@
+@page "/Checkout/OrderComplete.aspx"
+@model eShop.Web.Pages.Checkout.OrderCompleteModel
+@{ ViewData["Title"] = "Order Complete"; }
+@if(Model.Order==null){<div class="alert alert-warning">Order not found.</div>}else{<h1>Thank you for your order</h1><p>Order #@Model.Order.Id</p><p class="fs-4">Total: $@Model.Order.Total.ToString("0.00")</p><a href="/Checkout/OrderHistory.aspx">View order history</a>}

@@ -1,5 +1,23 @@
 # eShop on .NET Framework 4.8 – WebForms
 
+## ASP.NET Core application
+
+The migrated application is in `eShop.Web` and targets .NET 10 on Windows. The original Web Forms project remains buildable for rollback but is not required at runtime.
+
+```powershell
+# Build the retained legacy baseline and the Core application
+.\scripts\build.ps1 -Configuration Debug
+dotnet build .\eShop.Web\eShop.Web.csproj
+
+# Run the Core application
+dotnet run --project .\eShop.Web\eShop.Web.csproj
+
+# With the application running, execute HTTP smoke tests
+.\scripts\test.ps1 -SkipBuild
+```
+
+For published output, set `DataDirectory` to the absolute directory containing `eShopLegacy.mdf`, or override `ConnectionStrings__eShopContext` with a production SQL Server connection string.
+
 A classic reference e-commerce application built with **ASP.NET WebForms** on **.NET Framework 4.8**, Entity Framework 6, and ASP.NET Identity.  
 This project serves as the "legacy baseline" for migration to ASP.NET Core.
 

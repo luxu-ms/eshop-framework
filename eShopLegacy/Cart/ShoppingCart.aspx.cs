@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using eShopLegacy.App_Start;
 using eShopLegacy.DAL;
 
 namespace eShopLegacy.Cart
@@ -77,10 +78,7 @@ namespace eShopLegacy.Cart
 
         private string GetBuyerId()
         {
-            if (User.Identity.IsAuthenticated) return User.Identity.Name;
-            if (Session["AnonymousBuyerId"] == null)
-                Session["AnonymousBuyerId"] = Guid.NewGuid().ToString();
-            return Session["AnonymousBuyerId"].ToString();
+            return BuyerIdAccessor.Get(this);
         }
     }
 }

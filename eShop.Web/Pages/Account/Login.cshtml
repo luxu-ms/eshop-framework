@@ -1,0 +1,9 @@
+@page "/Account/Login.aspx"
+@model eShop.Web.Pages.Account.LoginModel
+@{ ViewData["Title"] = "Sign In"; }
+<div class="row justify-content-center"><div class="col-md-5"><div class="card shadow"><div class="card-header text-center"><h4 class="my-2 fw-bold">Sign In</h4></div><div class="card-body p-4">
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<form method="post"><input type="hidden" asp-for="ReturnUrl" /><div class="mb-3"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger"></span></div>
+<div class="mb-3"><label asp-for="Password" class="form-label"></label><input asp-for="Password" class="form-control" /><span asp-validation-for="Password" class="text-danger"></span></div>
+<div class="mb-3 form-check"><input asp-for="Remember" class="form-check-input" /><label asp-for="Remember" class="form-check-label"></label></div><button class="btn btn-primary w-100">Sign In</button></form><hr /><p class="text-center">Don't have an account? <a href="/Account/Register.aspx">Register</a></p>
+</div></div></div></div>

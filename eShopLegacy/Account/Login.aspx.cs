@@ -78,7 +78,7 @@ namespace eShopLegacy.Account
 
         private void TransferAnonymousBasket(string userId)
         {
-            string anonId = Session["AnonymousBuyerId"]?.ToString();
+            string anonId = BuyerIdAccessor.GetAnonymous(this);
             if (string.IsNullOrEmpty(anonId)) return;
 
             using (var ctx = new eShopContext())

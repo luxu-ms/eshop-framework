@@ -1,0 +1,8 @@
+@page "/Checkout/Checkout.aspx"
+@model eShop.Web.Pages.Checkout.CheckoutModel
+@{ ViewData["Title"] = "Checkout"; }
+<h1>Checkout</h1><div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<form method="post"><h4>Shipping address</h4><div class="row g-3">
+<div class="col-12"><label asp-for="Street"></label><input asp-for="Street" class="form-control" /></div><div class="col-md-6"><label asp-for="City"></label><input asp-for="City" class="form-control" /></div><div class="col-md-6"><label asp-for="State"></label><input asp-for="State" class="form-control" /></div><div class="col-md-6"><label asp-for="Country"></label><input asp-for="Country" class="form-control" /></div><div class="col-md-6"><label asp-for="ZipCode"></label><input asp-for="ZipCode" class="form-control" /></div></div>
+<h4 class="mt-4">Payment</h4><div class="row g-3"><div class="col-md-6"><label asp-for="CardNumber"></label><input asp-for="CardNumber" class="form-control" /></div><div class="col-md-6"><label asp-for="CardHolderName"></label><input asp-for="CardHolderName" class="form-control" /></div><div class="col-md-6"><label asp-for="CardExpiration"></label><input asp-for="CardExpiration" type="month" class="form-control" /></div><div class="col-md-3"><label asp-for="CardSecurityNumber"></label><input asp-for="CardSecurityNumber" class="form-control" maxlength="3" /></div></div>
+<button class="btn btn-success mt-4">Place Order</button></form>

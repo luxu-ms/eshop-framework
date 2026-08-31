@@ -17,4 +17,8 @@
 bin/
 obj/
 App_Data/
+!eShopLegacy/App_Data/
+eShopLegacy/App_Data/*
+!eShopLegacy/App_Data/README.md
 packages/
+artifacts/

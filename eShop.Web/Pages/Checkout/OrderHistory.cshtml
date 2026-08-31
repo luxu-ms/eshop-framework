@@ -1,0 +1,4 @@
+@page "/Checkout/OrderHistory.aspx"
+@model eShop.Web.Pages.Checkout.OrderHistoryModel
+@{ ViewData["Title"] = "Order History"; }
+<h1>Order History</h1>@if(Model.Orders.Count==0){<p>No orders found.</p>}else{<table class="table"><thead><tr><th>Order</th><th>Date</th><th>Status</th><th>Total</th></tr></thead><tbody>@foreach(var order in Model.Orders){<tr><td><a href="/Checkout/OrderComplete.aspx?orderId=@order.Id">#@order.Id</a></td><td>@order.OrderDate</td><td>@order.Status</td><td>$@order.Total.ToString("0.00")</td></tr>}</tbody></table>}
