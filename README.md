@@ -115,6 +115,21 @@ Press **F5** in Visual Studio. The app opens in IIS Express and redirects to `/C
 | **Account** | Register, sign in (ASP.NET Identity + OWIN cookies) |
 | **Admin** | CRUD product management (GridView + inline form) |
 
+### Catalog filter regression check
+
+Filter options are populated during page initialization, before WebForms restores
+posted selections. Applied filters and paging remain in the URL.
+
+1. Select the `.NET` brand and `Mug` type, then search for `Black`.
+   Confirm the resulting URL retains `brand`, `type`, and `q=Black`, and all
+   results match those filters.
+2. Change the search text and click Search again. Confirm the selected brand and
+   type are retained, including when JavaScript is disabled and all three values
+   are submitted together.
+3. Clear the filters from an empty result set. Confirm the full catalog returns.
+4. With enough matching products to paginate, use Next/Previous and add an item
+   to the cart. Confirm the applied filters and current page remain in the URL.
+
 ---
 
 ## Technology Stack
