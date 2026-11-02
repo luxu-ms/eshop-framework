@@ -10,15 +10,21 @@ namespace eShopLegacy.Catalog
     {
         private const int DefaultPageSize = 8;
 
-        // All state lives in the query string — no ViewState, no postbacks for filters/paging
+        // Applied filters and paging live in the query string.
         private int    QsPage   => int.TryParse(Request.QueryString["page"],  out int  p) ? Math.Max(0, p) : 0;
         private int    QsBrand  => int.TryParse(Request.QueryString["brand"], out int  b) ? b : 0;
         private int    QsType   => int.TryParse(Request.QueryString["type"],  out int  t) ? t : 0;
         private string QsSearch => (Request.QueryString["q"] ?? "").Trim();
 
+        protected override void OnInit(EventArgs e)
+        {
+            base.OnInit(e);
+            // Populate options before WebForms restores ViewState and posted selections.
+            BindFilters();
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
-            BindFilters();
             BindProducts();
         }
 
